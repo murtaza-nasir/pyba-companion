@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Simpson's paradox in the discount data</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 12px 14px;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--bs-body-color, #1f2328);
+    background: var(--bs-body-bg, transparent);
+    font-size: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d4da; }
+    .hint { color: #8a919c; }
+  }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 220px; accent-color: #0969da; }
+  button {
+    font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--bs-border-color, #d0d7de);
+    background: var(--bs-tertiary-bg, #f6f8fa); color: inherit;
+  }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  label { user-select: none; }
+</style>
+</head>
+<body>
+<div class="row">
+  <label><input type="checkbox" id="split"> Color by channel</label>
+  <span id="stats" class="readout hint"></span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">450 real Prairie Wholesale orders: discount rate against order total (log scale).
+Pooled, the trend line slopes upward: deeper discounts, bigger orders. Check the box.
+Within every channel the lines slope downward. Both readings are computed from the same points.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    axis: dark ? '#8a919c' : '#57606a',
+    text: dark ? '#d0d4da' : '#1f2328',
+    bar:  dark ? 'rgba(88,166,255,0.55)' : 'rgba(9,105,218,0.45)',
+    barEdge: dark ? '#58a6ff' : '#0969da',
+    grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+  };
+}
+
+const DATA = [{"c": "online", "d": 0.0, "t": 91.16}, {"c": "online", "d": 0.0, "t": 8.76}, {"c": "online", "d": 0.01, "t": 105.92}, {"c": "online", "d": 0.079, "t": 39.21}, {"c": "online", "d": 0.019, "t": 86.28}, {"c": "online", "d": 0.02, "t": 115.89}, {"c": "online", "d": 0.0, "t": 54.01}, {"c": "online", "d": 0.071, "t": 56.22}, {"c": "online", "d": 0.041, "t": 450.22}, {"c": "online", "d": 0.0, "t": 29.46}, {"c": "online", "d": 0.01, "t": 44.11}, {"c": "online", "d": 0.046, "t": 108.16}, {"c": "online", "d": 0.049, "t": 135.3}, {"c": "online", "d": 0.054, "t": 128.7}, {"c": "online", "d": 0.038, "t": 217.55}, {"c": "online", "d": 0.072, "t": 62.21}, {"c": "online", "d": 0.083, "t": 183.63}, {"c": "online", "d": 0.072, "t": 123.64}, {"c": "online", "d": 0.095, "t": 7.68}, {"c": "online", "d": 0.096, "t": 121.46}, {"c": "online", "d": 0.063, "t": 119.72}, {"c": "online", "d": 0.069, "t": 108.3}, {"c": "online", "d": 0.0, "t": 66.06}, {"c": "online", "d": 0.01, "t": 11.25}, {"c": "online", "d": 0.0, "t": 46.82}, {"c": "online", "d": 0.022, "t": 77.33}, {"c": "online", "d": 0.0, "t": 95.28}, {"c": "online", "d": 0.081, "t": 36.38}, {"c": "online", "d": 0.019, "t": 65.76}, {"c": "online", "d": 0.076, "t": 13.87}, {"c": "online", "d": 0.087, "t": 231.86}, {"c": "online", "d": 0.079, "t": 49.98}, {"c": "online", "d": 0.069, "t": 351.84}, {"c": "online", "d": 0.0, "t": 45.0}, {"c": "online", "d": 0.045, "t": 13.36}, {"c": "online", "d": 0.0, "t": 51.95}, {"c": "online", "d": 0.01, "t": 88.5}, {"c": "online", "d": 0.046, "t": 151.28}, {"c": "online", "d": 0.065, "t": 46.2}, {"c": "online", "d": 0.069, "t": 7.43}, {"c": "online", "d": 0.091, "t": 46.78}, {"c": "online", "d": 0.016, "t": 246.29}, {"c": "online", "d": 0.037, "t": 46.18}, {"c": "online", "d": 0.07, "t": 51.14}, {"c": "online", "d": 0.089, "t": 72.47}, {"c": "online", "d": 0.031, "t": 29.22}, {"c": "online", "d": 0.055, "t": 74.96}, {"c": "online", "d": 0.004, "t": 14.91}, {"c": "online", "d": 0.058, "t": 85.27}, {"c": "online", "d": 0.059, "t": 48.16}, {"c": "online", "d": 0.0, "t": 21.95}, {"c": "online", "d": 0.008, "t": 114.95}, {"c": "online", "d": 0.017, "t": 7.43}, {"c": "online", "d": 0.057, "t": 103.15}, {"c": "online", "d": 0.055, "t": 7.3}, {"c": "online", "d": 0.0, "t": 108.06}, {"c": "online", "d": 0.057, "t": 190.67}, {"c": "online", "d": 0.11, "t": 80.96}, {"c": "online", "d": 0.061, "t": 149.2}, {"c": "online", "d": 0.058, "t": 18.82}, {"c": "online", "d": 0.0, "t": 79.37}, {"c": "online", "d": 0.002, "t": 508.48}, {"c": "online", "d": 0.0, "t": 61.31}, {"c": "online", "d": 0.019, "t": 44.49}, {"c": "online", "d": 0.06, "t": 344.77}, {"c": "online", "d": 0.069, "t": 259.4}, {"c": "online", "d": 0.026, "t": 171.85}, {"c": "online", "d": 0.019, "t": 84.64}, {"c": "online", "d": 0.082, "t": 41.66}, {"c": "online", "d": 0.0, "t": 26.87}, {"c": "online", "d": 0.101, "t": 256.88}, {"c": "online", "d": 0.043, "t": 111.03}, {"c": "online", "d": 0.023, "t": 19.94}, {"c": "online", "d": 0.066, "t": 162.86}, {"c": "online", "d": 0.101, "t": 370.24}, {"c": "online", "d": 0.0, "t": 33.22}, {"c": "online", "d": 0.096, "t": 362.44}, {"c": "online", "d": 0.058, "t": 57.3}, {"c": "online", "d": 0.088, "t": 47.67}, {"c": "online", "d": 0.006, "t": 40.68}, {"c": "online", "d": 0.004, "t": 205.48}, {"c": "online", "d": 0.033, "t": 4.05}, {"c": "online", "d": 0.104, "t": 123.32}, {"c": "online", "d": 0.062, "t": 605.85}, {"c": "online", "d": 0.061, "t": 7.1}, {"c": "online", "d": 0.082, "t": 100.0}, {"c": "online", "d": 0.083, "t": 11.93}, {"c": "online", "d": 0.0, "t": 158.68}, {"c": "online", "d": 0.002, "t": 37.47}, {"c": "online", "d": 0.08, "t": 73.0}, {"c": "online", "d": 0.059, "t": 58.84}, {"c": "online", "d": 0.0, "t": 236.38}, {"c": "online", "d": 0.091, "t": 363.89}, {"c": "online", "d": 0.094, "t": 49.31}, {"c": "online", "d": 0.029, "t": 270.51}, {"c": "online", "d": 0.056, "t": 63.42}, {"c": "online", "d": 0.0, "t": 95.75}, {"c": "online", "d": 0.011, "t": 517.44}, {"c": "online", "d": 0.094, "t": 34.36}, {"c": "online", "d": 0.04, "t": 217.95}, {"c": "online", "d": 0.038, "t": 21.88}, {"c": "online", "d": 0.038, "t": 246.93}, {"c": "online", "d": 0.083, "t": 130.69}, {"c": "online", "d": 0.057, "t": 194.57}, {"c": "online", "d": 0.036, "t": 255.41}, {"c": "online", "d": 0.044, "t": 24.71}, {"c": "online", "d": 0.025, "t": 40.04}, {"c": "online", "d": 0.014, "t": 173.11}, {"c": "online", "d": 0.0, "t": 112.2}, {"c": "online", "d": 0.059, "t": 298.82}, {"c": "online", "d": 0.022, "t": 50.79}, {"c": "online", "d": 0.045, "t": 53.29}, {"c": "online", "d": 0.068, "t": 99.52}, {"c": "online", "d": 0.073, "t": 82.27}, {"c": "online", "d": 0.065, "t": 77.69}, {"c": "online", "d": 0.0, "t": 168.26}, {"c": "online", "d": 0.0, "t": 252.12}, {"c": "online", "d": 0.01, "t": 122.04}, {"c": "online", "d": 0.089, "t": 6.51}, {"c": "online", "d": 0.0, "t": 170.44}, {"c": "online", "d": 0.0, "t": 163.77}, {"c": "online", "d": 0.0, "t": 781.37}, {"c": "online", "d": 0.025, "t": 158.37}, {"c": "online", "d": 0.051, "t": 7.84}, {"c": "online", "d": 0.058, "t": 83.43}, {"c": "online", "d": 0.103, "t": 210.3}, {"c": "online", "d": 0.024, "t": 1062.78}, {"c": "online", "d": 0.084, "t": 36.43}, {"c": "online", "d": 0.045, "t": 68.37}, {"c": "online", "d": 0.096, "t": 54.14}, {"c": "online", "d": 0.098, "t": 191.95}, {"c": "online", "d": 0.0, "t": 196.42}, {"c": "online", "d": 0.022, "t": 53.66}, {"c": "online", "d": 0.063, "t": 57.44}, {"c": "online", "d": 0.086, "t": 15.22}, {"c": "online", "d": 0.065, "t": 98.48}, {"c": "online", "d": 0.027, "t": 64.94}, {"c": "online", "d": 0.0, "t": 220.84}, {"c": "online", "d": 0.068, "t": 38.98}, {"c": "online", "d": 0.033, "t": 171.39}, {"c": "online", "d": 0.0, "t": 225.89}, {"c": "online", "d": 0.06, "t": 126.32}, {"c": "online", "d": 0.0, "t": 235.42}, {"c": "online", "d": 0.001, "t": 258.35}, {"c": "online", "d": 0.084, "t": 129.0}, {"c": "online", "d": 0.056, "t": 442.0}, {"c": "online", "d": 0.079, "t": 123.5}, {"c": "online", "d": 0.048, "t": 19.56}, {"c": "online", "d": 0.005, "t": 254.66}, {"c": "online", "d": 0.057, "t": 34.84}, {"c": "phone", "d": 0.0, "t": 31.33}, {"c": "phone", "d": 0.0, "t": 71.7}, {"c": "phone", "d": 0.054, "t": 91.58}, {"c": "phone", "d": 0.0, "t": 115.56}, {"c": "phone", "d": 0.073, "t": 71.52}, {"c": "phone", "d": 0.075, "t": 146.93}, {"c": "phone", "d": 0.045, "t": 89.07}, {"c": "phone", "d": 0.017, "t": 486.29}, {"c": "phone", "d": 0.064, "t": 895.64}, {"c": "phone", "d": 0.012, "t": 17.14}, {"c": "phone", "d": 0.04, "t": 224.04}, {"c": "phone", "d": 0.073, "t": 82.14}, {"c": "phone", "d": 0.061, "t": 933.01}, {"c": "phone", "d": 0.0, "t": 554.07}, {"c": "phone", "d": 0.068, "t": 141.91}, {"c": "phone", "d": 0.004, "t": 203.91}, {"c": "phone", "d": 0.03, "t": 53.65}, {"c": "phone", "d": 0.0, "t": 493.58}, {"c": "phone", "d": 0.0, "t": 1613.99}, {"c": "phone", "d": 0.035, "t": 178.98}, {"c": "phone", "d": 0.0, "t": 212.19}, {"c": "phone", "d": 0.0, "t": 59.18}, {"c": "phone", "d": 0.025, "t": 22.62}, {"c": "phone", "d": 0.01, "t": 176.9}, {"c": "phone", "d": 0.04, "t": 15.51}, {"c": "phone", "d": 0.051, "t": 59.13}, {"c": "phone", "d": 0.074, "t": 476.28}, {"c": "phone", "d": 0.066, "t": 20.31}, {"c": "phone", "d": 0.017, "t": 300.53}, {"c": "phone", "d": 0.037, "t": 216.7}, {"c": "phone", "d": 0.046, "t": 32.5}, {"c": "phone", "d": 0.0, "t": 726.35}, {"c": "phone", "d": 0.021, "t": 88.7}, {"c": "phone", "d": 0.055, "t": 258.7}, {"c": "phone", "d": 0.065, "t": 29.79}, {"c": "phone", "d": 0.0, "t": 764.88}, {"c": "phone", "d": 0.003, "t": 100.89}, {"c": "phone", "d": 0.044, "t": 299.67}, {"c": "phone", "d": 0.0, "t": 184.06}, {"c": "phone", "d": 0.0, "t": 1997.56}, {"c": "phone", "d": 0.001, "t": 118.38}, {"c": "phone", "d": 0.0, "t": 381.24}, {"c": "phone", "d": 0.057, "t": 124.14}, {"c": "phone", "d": 0.037, "t": 254.17}, {"c": "phone", "d": 0.02, "t": 31.39}, {"c": "phone", "d": 0.048, "t": 19.56}, {"c": "phone", "d": 0.065, "t": 8.19}, {"c": "phone", "d": 0.084, "t": 30.88}, {"c": "phone", "d": 0.069, "t": 128.7}, {"c": "phone", "d": 0.061, "t": 265.39}, {"c": "phone", "d": 0.041, "t": 914.28}, {"c": "phone", "d": 0.0, "t": 142.78}, {"c": "phone", "d": 0.056, "t": 70.61}, {"c": "phone", "d": 0.0, "t": 136.9}, {"c": "phone", "d": 0.0, "t": 135.35}, {"c": "phone", "d": 0.068, "t": 18.04}, {"c": "phone", "d": 0.052, "t": 448.51}, {"c": "phone", "d": 0.027, "t": 447.97}, {"c": "phone", "d": 0.0, "t": 163.07}, {"c": "phone", "d": 0.0, "t": 291.3}, {"c": "phone", "d": 0.0, "t": 386.14}, {"c": "phone", "d": 0.0, "t": 782.02}, {"c": "phone", "d": 0.0, "t": 15.55}, {"c": "phone", "d": 0.011, "t": 88.16}, {"c": "phone", "d": 0.003, "t": 246.42}, {"c": "phone", "d": 0.011, "t": 134.74}, {"c": "phone", "d": 0.051, "t": 106.44}, {"c": "phone", "d": 0.006, "t": 45.33}, {"c": "phone", "d": 0.042, "t": 142.46}, {"c": "phone", "d": 0.039, "t": 187.4}, {"c": "phone", "d": 0.052, "t": 14.01}, {"c": "phone", "d": 0.0, "t": 166.72}, {"c": "phone", "d": 0.043, "t": 383.0}, {"c": "phone", "d": 0.051, "t": 207.79}, {"c": "phone", "d": 0.046, "t": 47.67}, {"c": "phone", "d": 0.0, "t": 321.55}, {"c": "phone", "d": 0.027, "t": 572.18}, {"c": "phone", "d": 0.04, "t": 92.18}, {"c": "phone", "d": 0.024, "t": 81.05}, {"c": "phone", "d": 0.092, "t": 58.02}, {"c": "phone", "d": 0.0, "t": 431.04}, {"c": "phone", "d": 0.024, "t": 314.57}, {"c": "phone", "d": 0.0, "t": 511.72}, {"c": "phone", "d": 0.058, "t": 38.85}, {"c": "phone", "d": 0.0, "t": 113.89}, {"c": "phone", "d": 0.054, "t": 52.66}, {"c": "phone", "d": 0.007, "t": 110.81}, {"c": "phone", "d": 0.0, "t": 1673.48}, {"c": "phone", "d": 0.016, "t": 451.16}, {"c": "phone", "d": 0.0, "t": 107.11}, {"c": "phone", "d": 0.0, "t": 230.82}, {"c": "phone", "d": 0.014, "t": 702.73}, {"c": "phone", "d": 0.0, "t": 530.9}, {"c": "phone", "d": 0.062, "t": 41.07}, {"c": "phone", "d": 0.059, "t": 40.33}, {"c": "phone", "d": 0.0, "t": 425.06}, {"c": "phone", "d": 0.0, "t": 17.96}, {"c": "phone", "d": 0.0, "t": 1023.44}, {"c": "phone", "d": 0.009, "t": 135.47}, {"c": "phone", "d": 0.019, "t": 325.87}, {"c": "phone", "d": 0.058, "t": 235.81}, {"c": "phone", "d": 0.026, "t": 326.06}, {"c": "phone", "d": 0.066, "t": 159.96}, {"c": "phone", "d": 0.026, "t": 329.12}, {"c": "phone", "d": 0.04, "t": 82.85}, {"c": "phone", "d": 0.035, "t": 53.51}, {"c": "phone", "d": 0.0, "t": 284.35}, {"c": "phone", "d": 0.005, "t": 195.0}, {"c": "phone", "d": 0.026, "t": 73.84}, {"c": "phone", "d": 0.02, "t": 773.53}, {"c": "phone", "d": 0.008, "t": 20.03}, {"c": "phone", "d": 0.051, "t": 139.64}, {"c": "phone", "d": 0.014, "t": 1481.79}, {"c": "phone", "d": 0.002, "t": 116.69}, {"c": "phone", "d": 0.032, "t": 55.06}, {"c": "phone", "d": 0.026, "t": 832.79}, {"c": "phone", "d": 0.034, "t": 218.61}, {"c": "phone", "d": 0.001, "t": 92.3}, {"c": "phone", "d": 0.0, "t": 525.37}, {"c": "phone", "d": 0.074, "t": 100.56}, {"c": "phone", "d": 0.0, "t": 75.66}, {"c": "phone", "d": 0.0, "t": 402.08}, {"c": "phone", "d": 0.0, "t": 24.17}, {"c": "phone", "d": 0.021, "t": 179.84}, {"c": "phone", "d": 0.0, "t": 243.41}, {"c": "phone", "d": 0.004, "t": 1824.06}, {"c": "phone", "d": 0.0, "t": 135.93}, {"c": "phone", "d": 0.025, "t": 234.02}, {"c": "phone", "d": 0.0, "t": 351.34}, {"c": "phone", "d": 0.081, "t": 47.18}, {"c": "phone", "d": 0.079, "t": 86.4}, {"c": "phone", "d": 0.0, "t": 363.44}, {"c": "phone", "d": 0.045, "t": 211.23}, {"c": "phone", "d": 0.04, "t": 97.25}, {"c": "phone", "d": 0.027, "t": 32.11}, {"c": "phone", "d": 0.0, "t": 129.18}, {"c": "phone", "d": 0.016, "t": 251.07}, {"c": "phone", "d": 0.027, "t": 148.57}, {"c": "phone", "d": 0.019, "t": 1262.74}, {"c": "phone", "d": 0.021, "t": 221.24}, {"c": "phone", "d": 0.02, "t": 147.93}, {"c": "phone", "d": 0.02, "t": 31.41}, {"c": "phone", "d": 0.01, "t": 532.04}, {"c": "phone", "d": 0.054, "t": 51.39}, {"c": "phone", "d": 0.034, "t": 42.32}, {"c": "phone", "d": 0.079, "t": 107.99}, {"c": "phone", "d": 0.0, "t": 104.74}, {"c": "phone", "d": 0.047, "t": 647.47}, {"c": "phone", "d": 0.063, "t": 178.26}, {"c": "phone", "d": 0.009, "t": 243.27}, {"c": "rep", "d": 0.097, "t": 1664.41}, {"c": "rep", "d": 0.088, "t": 909.52}, {"c": "rep", "d": 0.18, "t": 596.66}, {"c": "rep", "d": 0.093, "t": 726.59}, {"c": "rep", "d": 0.149, "t": 342.53}, {"c": "rep", "d": 0.187, "t": 172.79}, {"c": "rep", "d": 0.196, "t": 3.76}, {"c": "rep", "d": 0.098, "t": 308.41}, {"c": "rep", "d": 0.152, "t": 14.63}, {"c": "rep", "d": 0.199, "t": 1274.13}, {"c": "rep", "d": 0.174, "t": 821.24}, {"c": "rep", "d": 0.126, "t": 652.94}, {"c": "rep", "d": 0.078, "t": 252.11}, {"c": "rep", "d": 0.16, "t": 177.6}, {"c": "rep", "d": 0.132, "t": 34.46}, {"c": "rep", "d": 0.175, "t": 22.09}, {"c": "rep", "d": 0.143, "t": 165.82}, {"c": "rep", "d": 0.162, "t": 1165.83}, {"c": "rep", "d": 0.184, "t": 92.73}, {"c": "rep", "d": 0.181, "t": 57.17}, {"c": "rep", "d": 0.159, "t": 217.76}, {"c": "rep", "d": 0.111, "t": 1318.01}, {"c": "rep", "d": 0.107, "t": 540.2}, {"c": "rep", "d": 0.182, "t": 626.63}, {"c": "rep", "d": 0.153, "t": 255.72}, {"c": "rep", "d": 0.153, "t": 889.58}, {"c": "rep", "d": 0.187, "t": 314.13}, {"c": "rep", "d": 0.186, "t": 128.28}, {"c": "rep", "d": 0.197, "t": 25.87}, {"c": "rep", "d": 0.193, "t": 675.25}, {"c": "rep", "d": 0.141, "t": 393.58}, {"c": "rep", "d": 0.174, "t": 273.78}, {"c": "rep", "d": 0.085, "t": 178.35}, {"c": "rep", "d": 0.186, "t": 916.34}, {"c": "rep", "d": 0.207, "t": 364.54}, {"c": "rep", "d": 0.105, "t": 22.14}, {"c": "rep", "d": 0.168, "t": 404.96}, {"c": "rep", "d": 0.096, "t": 346.29}, {"c": "rep", "d": 0.157, "t": 686.88}, {"c": "rep", "d": 0.121, "t": 108.25}, {"c": "rep", "d": 0.136, "t": 567.24}, {"c": "rep", "d": 0.139, "t": 1352.87}, {"c": "rep", "d": 0.095, "t": 1961.77}, {"c": "rep", "d": 0.12, "t": 599.76}, {"c": "rep", "d": 0.183, "t": 103.68}, {"c": "rep", "d": 0.114, "t": 240.56}, {"c": "rep", "d": 0.163, "t": 803.27}, {"c": "rep", "d": 0.186, "t": 1109.19}, {"c": "rep", "d": 0.125, "t": 75.82}, {"c": "rep", "d": 0.096, "t": 231.41}, {"c": "rep", "d": 0.098, "t": 57.29}, {"c": "rep", "d": 0.151, "t": 6.07}, {"c": "rep", "d": 0.119, "t": 1415.91}, {"c": "rep", "d": 0.121, "t": 370.03}, {"c": "rep", "d": 0.118, "t": 802.5}, {"c": "rep", "d": 0.137, "t": 1831.7}, {"c": "rep", "d": 0.17, "t": 73.4}, {"c": "rep", "d": 0.141, "t": 1877.07}, {"c": "rep", "d": 0.165, "t": 154.99}, {"c": "rep", "d": 0.2, "t": 50.45}, {"c": "rep", "d": 0.192, "t": 227.22}, {"c": "rep", "d": 0.112, "t": 348.41}, {"c": "rep", "d": 0.088, "t": 217.3}, {"c": "rep", "d": 0.172, "t": 61.71}, {"c": "rep", "d": 0.12, "t": 1519.85}, {"c": "rep", "d": 0.106, "t": 435.1}, {"c": "rep", "d": 0.107, "t": 382.87}, {"c": "rep", "d": 0.187, "t": 223.05}, {"c": "rep", "d": 0.183, "t": 159.5}, {"c": "rep", "d": 0.118, "t": 366.11}, {"c": "rep", "d": 0.086, "t": 978.72}, {"c": "rep", "d": 0.181, "t": 173.77}, {"c": "rep", "d": 0.166, "t": 101.12}, {"c": "rep", "d": 0.152, "t": 1340.64}, {"c": "rep", "d": 0.159, "t": 135.98}, {"c": "rep", "d": 0.127, "t": 833.34}, {"c": "rep", "d": 0.153, "t": 651.62}, {"c": "rep", "d": 0.096, "t": 344.54}, {"c": "rep", "d": 0.076, "t": 99.27}, {"c": "rep", "d": 0.192, "t": 87.27}, {"c": "rep", "d": 0.166, "t": 1997.07}, {"c": "rep", "d": 0.111, "t": 214.34}, {"c": "rep", "d": 0.106, "t": 273.52}, {"c": "rep", "d": 0.138, "t": 46.27}, {"c": "rep", "d": 0.128, "t": 294.36}, {"c": "rep", "d": 0.156, "t": 819.46}, {"c": "rep", "d": 0.126, "t": 496.77}, {"c": "rep", "d": 0.204, "t": 30.61}, {"c": "rep", "d": 0.153, "t": 582.12}, {"c": "rep", "d": 0.112, "t": 1133.75}, {"c": "rep", "d": 0.099, "t": 1602.22}, {"c": "rep", "d": 0.14, "t": 900.58}, {"c": "rep", "d": 0.111, "t": 869.07}, {"c": "rep", "d": 0.131, "t": 1007.42}, {"c": "rep", "d": 0.121, "t": 287.03}, {"c": "rep", "d": 0.151, "t": 1868.72}, {"c": "rep", "d": 0.149, "t": 1169.31}, {"c": "rep", "d": 0.107, "t": 72.84}, {"c": "rep", "d": 0.085, "t": 758.99}, {"c": "rep", "d": 0.167, "t": 835.83}, {"c": "rep", "d": 0.125, "t": 1899.77}, {"c": "rep", "d": 0.174, "t": 264.27}, {"c": "rep", "d": 0.186, "t": 193.47}, {"c": "rep", "d": 0.117, "t": 136.14}, {"c": "rep", "d": 0.18, "t": 1671.04}, {"c": "rep", "d": 0.127, "t": 402.13}, {"c": "rep", "d": 0.121, "t": 102.59}, {"c": "rep", "d": 0.113, "t": 241.36}, {"c": "rep", "d": 0.199, "t": 84.49}, {"c": "rep", "d": 0.144, "t": 912.4}, {"c": "rep", "d": 0.123, "t": 430.64}, {"c": "rep", "d": 0.107, "t": 930.18}, {"c": "rep", "d": 0.194, "t": 269.14}, {"c": "rep", "d": 0.176, "t": 102.73}, {"c": "rep", "d": 0.134, "t": 227.48}, {"c": "rep", "d": 0.156, "t": 144.75}, {"c": "rep", "d": 0.097, "t": 552.7}, {"c": "rep", "d": 0.09, "t": 1159.82}, {"c": "rep", "d": 0.103, "t": 1467.39}, {"c": "rep", "d": 0.127, "t": 1262.12}, {"c": "rep", "d": 0.204, "t": 343.79}, {"c": "rep", "d": 0.125, "t": 561.32}, {"c": "rep", "d": 0.142, "t": 1149.42}, {"c": "rep", "d": 0.138, "t": 394.36}, {"c": "rep", "d": 0.096, "t": 670.45}, {"c": "rep", "d": 0.19, "t": 297.46}, {"c": "rep", "d": 0.08, "t": 1717.81}, {"c": "rep", "d": 0.09, "t": 187.55}, {"c": "rep", "d": 0.108, "t": 622.46}, {"c": "rep", "d": 0.117, "t": 318.81}, {"c": "rep", "d": 0.153, "t": 74.58}, {"c": "rep", "d": 0.169, "t": 162.74}, {"c": "rep", "d": 0.184, "t": 121.24}, {"c": "rep", "d": 0.081, "t": 155.31}, {"c": "rep", "d": 0.15, "t": 1103.33}, {"c": "rep", "d": 0.174, "t": 630.79}, {"c": "rep", "d": 0.176, "t": 693.09}, {"c": "rep", "d": 0.115, "t": 184.94}, {"c": "rep", "d": 0.166, "t": 151.32}, {"c": "rep", "d": 0.085, "t": 1200.54}, {"c": "rep", "d": 0.173, "t": 55.85}, {"c": "rep", "d": 0.113, "t": 298.31}, {"c": "rep", "d": 0.177, "t": 588.09}, {"c": "rep", "d": 0.14, "t": 672.38}, {"c": "rep", "d": 0.171, "t": 1724.72}, {"c": "rep", "d": 0.116, "t": 440.38}, {"c": "rep", "d": 0.169, "t": 33.75}, {"c": "rep", "d": 0.14, "t": 361.57}, {"c": "rep", "d": 0.117, "t": 833.38}, {"c": "rep", "d": 0.109, "t": 613.62}];
+const CH = {'online': '#0969da', 'phone': '#bf8700', 'rep': '#8250df'};
+const LT = v => Math.log10(v);
+const TMIN = LT(3), TMAX = LT(2000);
+function fit(points) {
+  const n = points.length;
+  let sx=0, sy=0, sxy=0, sx2=0;
+  for (const p of points) { const yy = LT(p.t); sx+=p.d; sy+=yy; sxy+=p.d*yy; sx2+=p.d*p.d; }
+  const b = (n*sxy - sx*sy) / (n*sx2 - sx*sx);
+  return [sy/n - b*sx/n, b];
+}
+function corr(points) {
+  const n = points.length;
+  let sx=0, sy=0, sxy=0, sx2=0, sy2=0;
+  for (const p of points) { const yy = LT(p.t); sx+=p.d; sy+=yy; sxy+=p.d*yy; sx2+=p.d*p.d; sy2+=yy*yy; }
+  return (n*sxy - sx*sy) / Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy));
+}
+function draw() {
+  const split = document.getElementById('split').checked;
+  const [ctx, W, H] = setupCanvas('cv', 320);
+  const col = themeColors();
+  const L = 48, R = 14, T = 12, B = 34, DMAX = 0.28;
+  ctx.clearRect(0, 0, W, H);
+  const x = d => L + (W-L-R) * d / DMAX;
+  const y = t => T + (H-T-B) * (1 - (LT(t)-TMIN)/(TMAX-TMIN));
+  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  for (const d of [0, 0.1, 0.2]) ctx.fillText((d*100)+'%', x(d), H-12);
+  ctx.textAlign = 'right';
+  for (const t of [10, 100, 1000]) ctx.fillText('$'+t, L-6, y(t)+4);
+  ctx.textAlign = 'left';
+  for (const p of DATA) {
+    ctx.beginPath(); ctx.arc(x(p.d), y(p.t), 3, 0, 7);
+    ctx.fillStyle = split ? CH[p.c]+'99' : 'rgba(120,130,140,0.45)';
+    ctx.fill();
+  }
+  function line(points, color, width) {
+    const [a, b] = fit(points);
+    ctx.strokeStyle = color; ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x(0), T + (H-T-B)*(1-(a-TMIN)/(TMAX-TMIN)));
+    ctx.lineTo(x(DMAX), T + (H-T-B)*(1-(a+b*DMAX-TMIN)/(TMAX-TMIN)));
+    ctx.stroke(); ctx.lineWidth = 1;
+  }
+  let msg;
+  if (split) {
+    for (const ch of Object.keys(CH)) line(DATA.filter(p => p.c === ch), CH[ch], 2.5);
+    line(DATA, col.axis, 1.5);
+    msg = Object.keys(CH).map(ch =>
+      '<b style="color:'+CH[ch]+'">'+ch+' r='+corr(DATA.filter(p=>p.c===ch)).toFixed(2)+'</b>').join(' · ')
+      + ' · pooled r=' + corr(DATA).toFixed(2);
+  } else {
+    line(DATA, '#cf222e', 2.5);
+    msg = 'pooled r = <b class="red">' + corr(DATA).toFixed(2) + '</b>';
+  }
+  document.getElementById('stats').innerHTML = msg;
+}
+document.getElementById('split').addEventListener('change', draw);
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script>
+</body></html>

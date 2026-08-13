@@ -1,0 +1,93 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>RMSE explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: #1f2328; }
+  .big { font-size: 24px; font-weight: 700; }
+  .purple { color: #8250df; } .amber { color: #bf8700; } .red { color: #b62324; }
+  table { border-collapse: collapse; }
+  th, td { padding: 3px 10px; text-align: right; font-variant-numeric: tabular-nums; }
+  th { border-bottom: 1px solid var(--bs-border-color, #d0d7de); }
+  input[type=number] { width: 90px; font: inherit; text-align: right; padding: 2px 4px;
+           border: 1px solid var(--bs-border-color, #d0d7de); border-radius: 4px;
+           background: transparent; color: inherit; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d4da; } .hint { color: #8a919c; }
+    button { background: #21262d; border-color: #30363d; color: #d0d4da; }
+    input[type=number] { border-color: #30363d; }
+  }
+</style>
+</head>
+<body>
+<div class="row">
+  <button data-p="perfect">Perfect predictions</button>
+  <button data-p="small">Eight small errors</button>
+  <button data-p="large">One large error</button>
+</div>
+<div class="row" style="align-items:flex-start; gap:28px;">
+  <table id="tbl">
+    <tr><th>Actual ($)</th><th>Predicted ($)</th><th>Error ($)</th></tr>
+  </table>
+  <div style="min-width:220px;">
+    <div>RMSE:</div>
+    <div class="big purple"><span id="rmse"></span></div>
+    <div style="margin-top:10px;">Average absolute error:</div>
+    <div class="big amber"><span id="mae"></span></div>
+  </div>
+</div>
+<p class="hint">The actual values are fixed; the predicted values are editable. The two presets
+"eight small errors" and "one large error" have the same average absolute error, $100, yet their
+RMSEs differ by almost a factor of three, because each error is squared before averaging. Enter a
+large value in any predicted cell; you will see the RMSE respond far more than the average
+absolute error.</p>
+<script>
+const ACTUAL = [150, 220, 310, 400, 480, 560, 690, 830];
+const PRESETS = {
+  perfect: ACTUAL.slice(),
+  small: ACTUAL.map((v, i) => v + (i % 2 ? -100 : 100)),
+  large: ACTUAL.map((v, i) => i === 4 ? v + 800 : v),
+};
+const tbl = document.getElementById('tbl');
+ACTUAL.forEach((a, i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>' + a + '</td>' +
+    '<td><input type="number" id="p' + i + '" step="10"></td>' +
+    '<td id="m' + i + '"></td>';
+  tbl.appendChild(tr);
+});
+function compute() {
+  let sq = 0, ab = 0;
+  ACTUAL.forEach((a, i) => {
+    const p = +document.getElementById('p' + i).value || 0;
+    const miss = p - a;
+    sq += miss * miss; ab += Math.abs(miss);
+    const cell = document.getElementById('m' + i);
+    cell.textContent = miss > 0 ? '+' + miss : miss;
+    cell.className = Math.abs(miss) >= 300 ? 'red' : '';
+  });
+  document.getElementById('rmse').textContent = '$' + Math.sqrt(sq / ACTUAL.length).toFixed(0);
+  document.getElementById('mae').textContent = '$' + (ab / ACTUAL.length).toFixed(0);
+}
+function setPreset(name) {
+  PRESETS[name].forEach((v, i) => { document.getElementById('p' + i).value = v; });
+  compute();
+}
+document.querySelectorAll('button[data-p]').forEach(b =>
+  b.addEventListener('click', () => setPreset(b.dataset.p)));
+ACTUAL.forEach((a, i) =>
+  document.getElementById('p' + i).addEventListener('input', compute));
+setPreset('small');
+
+// report content height to the parent page so the iframe can size itself
+function pybaReportHeight() {
+  parent.postMessage({ pybaDemoHeight: document.body.scrollHeight + 28 }, "*");
+}
+new ResizeObserver(pybaReportHeight).observe(document.body);
+window.addEventListener("load", pybaReportHeight);
+</script></body></html>

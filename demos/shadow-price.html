@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Shadow price explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 200px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; } .green { color: #1a7f37; }
+</style>
+</head>
+<body>
+<div class="row">
+  <label>Display space: <b><span id="sv" class="readout">250</span> ft³</b>
+    <input type="range" id="s" min="120" max="600" step="10" value="250"></label>
+  <span class="readout">optimal margin <b class="purple">$<span id="mv"></span></b> ·
+    value of one more ft³ here <b class="amber">$<span id="slope"></span></b></span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">The optimal promotion margin, re-solved at every display size from 120 to 600 cubic
+feet (the budget stays at $25,000). The curve's local slope is the shadow price. It stays constant
+along each straight segment and falls at each bend, where a different constraint becomes the
+binding one. Past the last bend, more space adds nothing: space no longer limits the plan.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)' };
+}
+
+const CURVE = [[120, 9483.0], [130, 10153.0], [140, 10785.0], [150, 11418.0], [160, 12051.0], [170, 12684.0], [180, 13317.0], [190, 13949.0], [200, 14582.0], [210, 15215.0], [220, 15848.0], [230, 16233.0], [240, 16413.0], [250, 16593.0], [260, 16774.0], [270, 16954.0], [280, 17134.0], [290, 17315.0], [300, 17495.0], [310, 17633.0], [320, 17746.0], [330, 17760.0], [340, 17768.0], [350, 17776.0], [360, 17784.0], [370, 17791.0], [380, 17799.0], [390, 17807.0], [400, 17815.0], [410, 17823.0], [420, 17831.0], [430, 17839.0], [440, 17847.0], [450, 17855.0], [460, 17862.0], [470, 17870.0], [480, 17878.0], [490, 17886.0], [500, 17894.0], [510, 17902.0], [520, 17910.0], [530, 17918.0], [540, 17926.0], [550, 17933.0], [560, 17941.0], [570, 17949.0], [580, 17957.0], [590, 17965.0], [600, 17973.0]];
+function render() {
+  const sv = +document.getElementById('s').value;
+  document.getElementById('sv').textContent = sv;
+  const i = CURVE.findIndex(p => p[0] === sv);
+  const m = CURVE[i][1];
+  const slope = i < CURVE.length - 1 ? (CURVE[i + 1][1] - m) / 10 : 0;
+  document.getElementById('mv').textContent = m.toLocaleString();
+  document.getElementById('slope').textContent = slope.toFixed(2);
+  const [ctx, W, H] = setupCanvas('cv', 300);
+  const col = themeColors();
+  ctx.clearRect(0, 0, W, H);
+  const L = 65, R = 15, T = 12, B = 30;
+  const xmin = 120, xmax = 600;
+  const ymin = CURVE[0][1] * 0.95, ymax = CURVE[CURVE.length - 1][1] * 1.02;
+  const x = v => L + (W - L - R) * (v - xmin) / (xmax - xmin);
+  const y = v => T + (H - T - B) * (1 - (v - ymin) / (ymax - ymin));
+  ctx.strokeStyle = col.grid; ctx.beginPath();
+  for (let g = 200; g <= 600; g += 100) { ctx.moveTo(x(g), T); ctx.lineTo(x(g), H - B); }
+  ctx.stroke();
+  ctx.strokeStyle = '#8250df'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); CURVE.forEach((p, j) => j ? ctx.lineTo(x(p[0]), y(p[1])) : ctx.moveTo(x(p[0]), y(p[1]))); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#bf8700';
+  ctx.beginPath(); ctx.arc(x(sv), y(m), 6, 0, 7); ctx.fill();
+  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  for (let g = 200; g <= 600; g += 100) ctx.fillText(g + ' ft³', x(g), H - 12);
+  ctx.textAlign = 'right';
+  for (const g of [12000, 14000, 16000, 18000]) if (g > ymin && g < ymax) ctx.fillText('$' + (g/1000) + 'k', L - 6, y(g) + 4);
+  ctx.textAlign = 'left';
+}
+document.getElementById('s').addEventListener('input', render);
+window.addEventListener('resize', render);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+render();
+</script></body></html>

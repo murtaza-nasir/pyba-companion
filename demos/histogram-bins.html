@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Histogram bin width explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 12px 14px;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--bs-body-color, #1f2328);
+    background: var(--bs-body-bg, transparent);
+    font-size: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d4da; }
+    .hint { color: #8a919c; }
+  }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 220px; accent-color: #0969da; }
+  button {
+    font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--bs-border-color, #d0d7de);
+    background: var(--bs-tertiary-bg, #f6f8fa); color: inherit;
+  }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  label { user-select: none; }
+</style>
+</head>
+<body>
+<div class="row">
+  <label>Bin width: $<span id="bwv" class="readout">50</span></label>
+  <input type="range" id="bw" min="10" max="250" step="5" value="50">
+  <span class="readout">mean <b class="blue">$<span id="meanv"></span></b> ·
+        median <b class="red">$<span id="medv"></span></b></span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">600 real Prairie Wholesale order totals. Drag the slider. Small bins show noise;
+very wide bins hide the distribution's shape. The mean sits to the right of the median at
+every bin width, because the skew is in the data. The bin width changes only the clarity
+of the picture.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    axis: dark ? '#8a919c' : '#57606a',
+    text: dark ? '#d0d4da' : '#1f2328',
+    bar:  dark ? 'rgba(88,166,255,0.55)' : 'rgba(9,105,218,0.45)',
+    barEdge: dark ? '#58a6ff' : '#0969da',
+    grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+  };
+}
+
+const DATA = [18.95, 574.55, 95.42, 42.69, 1295.54, 454.51, 133.49, 19.79, 372.34, 75.42, 6.83, 347.32, 794.47, 53.87, 14.12, 86.63, 221.1, 1239.3, 231.78, 373.46, 895.9, 100.92, 169.84, 194.71, 1261.5, 136.39, 363.89, 151.18, 135.86, 43.37, 829.6, 72.43, 96.03, 63.02, 611.64, 1101.8, 117.35, 84.93, 211.11, 152.27, 961.85, 51.6, 46.82, 965.89, 389.46, 89.02, 187.48, 586.19, 820.25, 85.25, 41.48, 176.52, 44.44, 367.98, 278.99, 15.22, 46.91, 216.66, 20.73, 372.1, 57.1, 26.65, 252.51, 120.75, 8.63, 172.62, 122.14, 475.8, 349.88, 3.77, 479.02, 360.56, 173.17, 50.59, 1324.87, 52.06, 65.99, 28.5, 12.22, 18.49, 386.81, 47.28, 109.78, 7.37, 217.87, 677.05, 68.83, 170.85, 230.42, 120.48, 822.2, 36.25, 1314.35, 52.83, 171.34, 3.79, 747.39, 78.59, 293.97, 65.29, 32.47, 243.49, 77.32, 10.49, 134.16, 219.82, 17.71, 12.91, 150.44, 208.06, 201.42, 409.97, 417.34, 1270.69, 341.85, 332.31, 110.62, 524.61, 302.76, 70.65, 117.08, 69.1, 602.46, 55.07, 441.43, 62.52, 244.44, 176.82, 299.51, 687.85, 32.4, 94.91, 1128.1, 14.39, 869.46, 146.31, 344.41, 392.48, 63.88, 568.01, 199.52, 209.49, 381.38, 59.52, 604.54, 110.89, 57.9, 52.49, 37.15, 581.19, 38.98, 1350.33, 107.37, 151.09, 30.27, 269.91, 28.54, 67.16, 468.36, 167.13, 585.96, 24.63, 1040.33, 217.08, 120.14, 562.26, 587.34, 45.96, 76.39, 410.98, 1109.39, 498.87, 574.76, 96.2, 45.73, 197.1, 244.61, 134.8, 41.15, 98.72, 483.03, 802.95, 57.19, 50.8, 90.03, 166.65, 12.04, 11.83, 56.4, 842.68, 282.19, 608.92, 109.19, 44.73, 105.62, 82.02, 676.38, 52.34, 24.37, 63.07, 240.28, 184.89, 319.84, 60.69, 143.21, 130.59, 26.32, 312.51, 109.93, 720.2, 50.38, 154.31, 910.95, 73.9, 65.45, 355.23, 276.96, 24.08, 33.39, 917.64, 33.64, 488.75, 523.05, 231.86, 103.42, 159.78, 577.92, 232.3, 415.81, 356.69, 153.58, 226.3, 79.35, 45.28, 61.91, 453.92, 291.26, 614.26, 110.45, 78.62, 431.16, 156.04, 85.63, 152.98, 209.08, 21.68, 6.04, 28.28, 181.4, 337.9, 337.46, 250.79, 112.27, 699.34, 246.78, 551.19, 666.06, 110.27, 584.87, 128.52, 15.98, 524.37, 760.21, 100.25, 164.18, 122.13, 185.47, 77.78, 204.67, 36.67, 201.14, 51.51, 233.16, 29.78, 538.06, 17.88, 47.91, 251.94, 76.02, 207.21, 57.64, 90.37, 39.77, 107.64, 771.85, 89.93, 164.77, 18.82, 385.84, 205.85, 100.15, 16.89, 260.68, 69.55, 63.76, 54.65, 62.65, 122.15, 595.53, 141.65, 606.8, 68.7, 612.04, 335.22, 177.3, 200.51, 99.98, 50.96, 1397.41, 10.95, 153.64, 495.57, 55.79, 135.44, 342.16, 12.26, 74.95, 93.43, 319.69, 715.67, 46.82, 1127.0, 127.59, 246.85, 84.56, 1415.76, 170.66, 88.79, 635.48, 150.64, 28.3, 22.69, 165.86, 77.0, 62.75, 384.88, 111.6, 159.33, 107.88, 1254.42, 254.12, 103.13, 14.01, 7.14, 81.98, 423.05, 307.72, 111.96, 691.82, 899.5, 411.94, 236.34, 214.14, 262.61, 120.51, 145.16, 33.62, 358.45, 518.18, 574.52, 321.8, 461.4, 365.54, 328.58, 121.3, 256.54, 122.39, 307.05, 615.1, 136.3, 443.09, 169.38, 177.67, 306.75, 7.3, 219.99, 1429.37, 37.49, 26.72, 949.49, 8.97, 106.39, 296.45, 8.7, 51.3, 103.72, 133.65, 111.24, 120.06, 538.03, 125.87, 22.98, 178.86, 29.56, 20.91, 77.02, 194.53, 149.05, 64.53, 1111.51, 490.22, 177.19, 50.15, 29.43, 90.35, 283.82, 597.68, 79.35, 177.95, 216.27, 12.78, 332.98, 125.83, 18.79, 26.24, 169.61, 297.46, 805.96, 31.32, 194.75, 161.22, 20.37, 192.26, 32.06, 207.04, 349.61, 1485.28, 71.27, 35.74, 315.5, 31.11, 1217.19, 175.67, 430.05, 313.93, 354.84, 339.65, 106.02, 439.21, 90.25, 40.06, 24.33, 9.09, 412.04, 97.26, 223.27, 67.05, 583.83, 719.24, 154.87, 388.28, 111.36, 18.99, 92.46, 271.69, 215.8, 903.75, 30.84, 41.53, 64.12, 38.03, 349.67, 360.77, 128.85, 16.86, 1110.19, 316.34, 261.7, 8.66, 213.58, 9.09, 74.02, 63.47, 72.51, 249.18, 96.92, 383.75, 676.57, 20.65, 110.98, 736.21, 353.43, 788.57, 138.63, 292.57, 186.77, 677.34, 687.47, 35.0, 21.59, 1091.92, 558.37, 9.74, 89.53, 140.68, 498.24, 212.52, 360.73, 229.41, 816.78, 321.98, 278.7, 84.11, 214.47, 918.08, 1266.1, 47.16, 382.47, 80.21, 148.04, 13.47, 447.89, 54.84, 655.56, 116.98, 57.35, 65.16, 382.35, 16.5, 651.55, 98.58, 23.72, 20.87, 209.97, 43.48, 102.56, 473.51, 347.94, 797.07, 194.94, 317.18, 28.77, 118.05, 1337.4, 128.09, 146.76, 117.89, 154.36, 33.43, 100.72, 154.8, 118.37, 301.35, 5.32, 561.86, 528.16, 1290.7, 47.25, 158.08, 46.84, 88.1, 88.77, 59.2, 404.97, 111.94, 47.44, 19.16, 28.69, 36.61, 196.17, 69.41, 70.16, 26.18, 243.63, 7.51, 201.03, 254.27, 49.35, 109.81, 337.21, 126.01, 178.1, 458.14, 601.29, 367.29, 105.3, 103.75, 550.4, 105.45, 208.3, 186.47, 1134.77, 356.69, 415.75, 166.83, 3.86, 19.22, 218.94, 82.27, 396.4, 226.57, 391.62, 12.73, 53.51, 263.27, 140.31, 321.48, 273.9, 32.06, 63.57];
+const mean = DATA.reduce((a,b)=>a+b,0)/DATA.length;
+const sorted = [...DATA].sort((a,b)=>a-b);
+const median = (sorted[299]+sorted[300])/2;
+document.getElementById('meanv').textContent = mean.toFixed(0);
+document.getElementById('medv').textContent = median.toFixed(0);
+const XMAX = 1500;
+function draw() {
+  const bw = +document.getElementById('bw').value;
+  document.getElementById('bwv').textContent = bw;
+  const [ctx, W, H] = setupCanvas('cv', 300);
+  const col = themeColors();
+  const L = 40, R = 10, T = 10, B = 28;
+  ctx.clearRect(0, 0, W, H);
+  const nbins = Math.ceil(XMAX / bw);
+  const counts = new Array(nbins).fill(0);
+  for (const v of DATA) counts[Math.min(nbins-1, Math.floor(v/bw))]++;
+  const ymax = Math.max(...counts) * 1.08;
+  const x = v => L + (W-L-R) * v / XMAX;
+  const y = c => T + (H-T-B) * (1 - c/ymax);
+  // grid + axes
+  ctx.strokeStyle = col.grid;
+  ctx.beginPath();
+  for (let gx = 0; gx <= XMAX; gx += 250) { ctx.moveTo(x(gx), T); ctx.lineTo(x(gx), H-B); }
+  ctx.stroke();
+  // bars
+  ctx.fillStyle = col.bar; ctx.strokeStyle = col.barEdge;
+  for (let i = 0; i < nbins; i++) {
+    if (!counts[i]) continue;
+    const x0 = x(i*bw), x1 = x(Math.min((i+1)*bw, XMAX));
+    ctx.fillRect(x0, y(counts[i]), x1-x0-1, H-B-y(counts[i]));
+  }
+  // mean / median markers
+  for (const [v, c, lbl] of [[mean, '#0969da', 'mean'], [median, '#cf222e', 'median']]) {
+    ctx.strokeStyle = c; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x(v), T); ctx.lineTo(x(v), H-B); ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.fillStyle = c; ctx.font = '12px sans-serif';
+    ctx.fillText(lbl, x(v)+4, T+12 + (lbl==='median'?14:0));
+  }
+  // x labels
+  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  for (let gx = 0; gx <= XMAX; gx += 250) ctx.fillText('$'+gx, x(gx), H-10);
+  ctx.textAlign = 'left';
+}
+document.getElementById('bw').addEventListener('input', draw);
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script>
+</body></html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Bayes' rule as a recount</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: #1f2328; }
+  canvas { width: 100%; height: auto; display: block; }
+  .big { font-size: 24px; font-weight: 700; }
+  .blue { color: #0969da; } .red { color: #b62324; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  .legend span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d4da; } .hint { color: #8a919c; }
+    button { background: #21262d; border-color: #30363d; color: #d0d4da; }
+  }
+</style>
+</head>
+<body>
+<div class="row">
+  <button id="go">Condition on the flag</button>
+  <span class="hint" id="sub">the same 400 invoices as the grid above, following its sliders</span>
+</div>
+<div class="row" style="align-items:flex-start; gap:24px;">
+  <div style="flex:1; min-width:260px;"><canvas id="cv"></canvas></div>
+  <div style="min-width:230px;">
+    <div id="q"></div>
+    <div class="big purple"><span id="prob"></span></div>
+    <div class="hint readout" id="calc"></div>
+    <div class="legend hint" id="legend" style="margin-top:10px; line-height:2;"></div>
+  </div>
+</div>
+<p class="hint">Before conditioning, the pie holds all 400 invoices, and the share of the two error
+slices (blue and dark red) is the base rate. Conditioning on the flag removes the unflagged slices
+(dark red and gray), and the two remaining slices are recounted out of the flagged invoices alone:
+the blue share of the smaller whole is the posterior. Bayes' rule performs exactly this recount.
+The pie follows the sliders of the grid above.</p>
+<script>
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+const N = 400;
+let params = { p: 0.04, se: 0.75, fp: 0.09 };
+let t = 0, target = 0, anim = null;
+
+function counts() {
+  const pos = Math.round(N * params.p), neg = N - pos;
+  const tp = Math.round(pos * params.se), fn = pos - tp;
+  const fpn = Math.round(neg * params.fp), tn = neg - fpn;
+  return { pos, neg, tp, fn, fpn, tn };
+}
+function draw() {
+  const k = counts();
+  const slices = [
+    { n: k.tp,  keep: true,  col: '#0969da',                label: 'flagged, error (caught)' },
+    { n: k.fn,  keep: false, col: '#82071e',                label: 'not flagged, error (missed)' },
+    { n: k.fpn, keep: true,  col: '#bf8700',                label: 'flagged, clean (false alarm)' },
+    { n: k.tn,  keep: false, col: 'rgba(139,148,158,0.35)', label: 'not flagged, clean (cleared)' },
+  ];
+  const [ctx, W, H] = setupCanvas('cv', 260);
+  ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2 - 10;
+  const w = slices.map(s => s.keep ? s.n : s.n * (1 - t));
+  const total = w.reduce((a, b) => a + b, 0);
+  let a0 = -Math.PI / 2;
+  slices.forEach((s, i) => {
+    if (w[i] <= 0) return;
+    const a1 = a0 + 2 * Math.PI * w[i] / total;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, a0, a1); ctx.closePath();
+    ctx.fillStyle = s.col; ctx.fill();
+    if (a1 - a0 > 0.25 && i < 3) {
+      const mid = (a0 + a1) / 2;
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(s.n, cx + Math.cos(mid) * r * 0.62, cy + Math.sin(mid) * r * 0.62 + 4);
+    }
+    a0 = a1;
+  });
+  const flagged = target === 1 && t >= 1;
+  const prior = (k.tp + k.fn) / N, post = k.tp + k.fpn > 0 ? k.tp / (k.tp + k.fpn) : 0;
+  document.getElementById('q').textContent = flagged
+    ? 'Among flagged invoices, the share with an error:'
+    : 'Among all invoices, the share with an error:';
+  document.getElementById('prob').textContent = ((flagged ? post : prior) * 100).toFixed(0) + '%';
+  document.getElementById('calc').textContent = flagged
+    ? k.tp + ' / (' + k.tp + ' + ' + k.fpn + ')'
+    : '(' + k.tp + ' + ' + k.fn + ') / ' + N;
+  document.getElementById('legend').innerHTML = slices.map(s =>
+    '<span style="opacity:' + (s.keep ? 1 : (1 - t)) + '"><span class="dot" style="background:' +
+    s.col + '"></span>' + s.n + ' ' + s.label + '</span>'
+  ).join('<br>');
+}
+function step() {
+  const dir = target > t ? 1 : -1;
+  t = Math.max(0, Math.min(1, t + dir * 0.045));
+  draw();
+  if (t !== target) anim = requestAnimationFrame(step);
+  else anim = null;
+}
+document.getElementById('go').addEventListener('click', function () {
+  target = target === 1 ? 0 : 1;
+  this.textContent = target === 1 ? 'Show all 400 invoices' : 'Condition on the flag';
+  if (!anim) anim = requestAnimationFrame(step);
+});
+// follow the grid demo's sliders (same page, same origin)
+try {
+  const chan = new BroadcastChannel('pyba-bayes');
+  chan.onmessage = function (e) {
+    if (!e.data) return;
+    params = { p: e.data.p, se: e.data.se, fp: e.data.fp };
+    draw();
+  };
+} catch (err) { /* channel unsupported: keep defaults */ }
+window.addEventListener('resize', draw);
+draw();
+
+// report content height to the parent page so the iframe can size itself
+function pybaReportHeight() {
+  parent.postMessage({ pybaDemoHeight: document.body.scrollHeight + 28 }, "*");
+}
+new ResizeObserver(pybaReportHeight).observe(document.body);
+window.addEventListener("load", pybaReportHeight);
+</script></body></html>

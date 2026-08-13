@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Same correlation, different data</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 200px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; } .green { color: #1a7f37; }
+
+/* Dark-mode form controls: the iframe cannot see the site theme variables,
+   so give buttons/selects explicit dark styling. */
+@media (prefers-color-scheme: dark) {
+  button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+  button:hover { background: #30363d; }
+  input[type=checkbox] { accent-color: #4493f8; }
+}
+</style>
+</head>
+<body>
+<div class="row">
+  <button data-k="I">Dataset I</button><button data-k="II">Dataset II</button>
+  <button data-k="III">Dataset III</button><button data-k="IV">Dataset IV</button>
+  <span class="readout">r = <b class="purple"><span id="r"></span></b> for all four datasets</span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">Anscombe's quartet: four datasets constructed to share the same correlation
+(r = 0.82), the same means, and the same fitted line. Dataset I is a genuine linear relationship;
+II is a smooth curve; III is a line with one outlier; IV is a vertical stack with one point. The
+summary statistics are identical across the four; the differences are visible only in a plot. For
+this reason, we always pair the number with the plot.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)' };
+}
+
+const SETS = {"I": [[10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5], [8.04, 6.95, 7.58, 8.81, 8.33, 9.96, 7.24, 4.26, 10.84, 4.82, 5.68]], "II": [[10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5], [9.14, 8.14, 8.74, 8.77, 9.26, 8.1, 6.13, 3.1, 9.13, 7.26, 4.74]], "III": [[10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5], [7.46, 6.77, 12.74, 7.11, 7.81, 8.84, 6.08, 5.39, 8.15, 6.42, 5.73]], "IV": [[8, 8, 8, 8, 8, 8, 8, 19, 8, 8, 8], [6.58, 5.76, 7.71, 8.84, 8.47, 7.04, 5.25, 12.5, 5.56, 7.91, 6.89]]};
+let cur = "I";
+function pearson(xs, ys) {
+  const n = xs.length;
+  let sx=0, sy=0, sxy=0, sx2=0, sy2=0;
+  for (let i=0;i<n;i++) { sx+=xs[i]; sy+=ys[i]; sxy+=xs[i]*ys[i]; sx2+=xs[i]*xs[i]; sy2+=ys[i]*ys[i]; }
+  return (n*sxy-sx*sy)/Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy));
+}
+function render() {
+  const [xs, ys] = SETS[cur];
+  document.getElementById('r').textContent = pearson(xs, ys).toFixed(2);
+  const [ctx, W, H] = setupCanvas('cv', 320);
+  const col = themeColors();
+  ctx.clearRect(0, 0, W, H);
+  const L = 40, R = 15, T = 12, B = 28;
+  const x = v => L + (W-L-R) * (v-2) / 18;
+  const y = v => T + (H-T-B) * (1 - (v-2) / 12);
+  ctx.strokeStyle = col.grid; ctx.beginPath();
+  for (let g=4; g<=18; g+=4) { ctx.moveTo(x(g), T); ctx.lineTo(x(g), H-B); }
+  ctx.stroke();
+  ctx.strokeStyle = '#cf222e'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x(2), y(3 + 0.5*2)); ctx.lineTo(x(20), y(3 + 0.5*20)); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#0969da';
+  for (let i=0;i<xs.length;i++) { ctx.beginPath(); ctx.arc(x(xs[i]), y(ys[i]), 6, 0, 7); ctx.fill(); }
+  ctx.fillStyle = col.axis; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  for (let g=4; g<=18; g+=4) ctx.fillText(g, x(g), H-10);
+}
+document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { cur = b.dataset.k; render(); }));
+window.addEventListener('resize', render);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+render();
+</script></body></html>

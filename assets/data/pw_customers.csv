@@ -1,0 +1,901 @@
+customer_id,name,business_type,city,region,signup_date
+C0001,Chisholm Hardware,retail,Wichita,South Central,2022-09-05
+C0002,Arkalon Outfitters,retail,Kansas City,Northeast,2020-03-31
+C0003,Prairie Youth Club,nonprofit,Manhattan,Northeast,2019-12-17
+C0004,Tallgrass Engineering,office,Topeka,Northeast,2019-03-16
+C0005,Neosho Bistro,restaurant,Dodge City,Southwest,2020-02-06
+C0006,Konza Realty,office,Lawrence,Northeast,2021-05-15
+C0007,Neosho Insurance,office,Derby,South Central,2022-01-06
+C0008,Gypsum Bistro,restaurant,Wichita,South Central,2025-09-29
+C0009,Gypsum High School,school,Wichita,South Central,2022-11-23
+C0010,Konza Insurance,office,Kansas City,Northeast,2022-03-14
+C0011,Cedar Urgent Care,clinic,Salina,North Central,2020-11-09
+C0012,Redbud Middle School,school,Wichita,South Central,2023-01-15
+C0013,Meadowlark Emporium,retail,Wichita,South Central,2021-09-22
+C0014,Konza Accounting,office,Wichita,South Central,2020-02-14
+C0015,Walnut Law Office,office,Topeka,Northeast,2022-05-24
+C0016,Heartland Trading Co,retail,Wichita,South Central,2019-05-03
+C0017,Arkalon High School,school,Dodge City,Southwest,2021-10-11
+C0018,Gypsum Hardware,retail,Salina,North Central,2019-10-17
+C0019,Prairie Insurance,office,Pittsburg,Southeast,2020-04-15
+C0020,Arkalon Trading Co,retail,Wichita,South Central,2024-04-23
+C0021,Bluestem Engineering,office,Wichita,South Central,2019-07-12
+C0022,Saline Grill,restaurant,Wichita,South Central,2019-04-04
+C0023,Cottonwood Accounting,office,Wichita,South Central,2021-01-05
+C0024,Tallgrass Dental,clinic,Wichita,South Central,2021-04-04
+C0025,Flint Hills Academy,school,Hays,Northwest,2019-08-11
+C0026,Ninnescah Realty,office,Dodge City,Southwest,2018-10-17
+C0027,Redbud Law Office,office,Wichita,South Central,2025-09-14
+C0028,Cedar Trading Co,retail,Manhattan,Northeast,2019-11-11
+C0029,Walnut Steakhouse,restaurant,Wichita,South Central,2021-08-15
+C0030,Bluestem Elementary,school,Wichita,South Central,2018-09-10
+C0031,Prairie Diner,restaurant,Wichita,South Central,2019-04-07
+C0032,Neosho USD Office,school,Topeka,Northeast,2019-03-06
+C0033,Neosho BBQ,restaurant,Wichita,South Central,2018-10-29
+C0034,Heartland Engineering,office,Derby,South Central,2022-11-22
+C0035,Sunflower Realty,office,Lawrence,Northeast,2018-07-04
+C0036,Neosho Cafe,restaurant,Wichita,South Central,2019-03-10
+C0037,Saline Diner,restaurant,Kansas City,Northeast,2022-09-09
+C0038,Chisholm Hardware #2,retail,Wichita,South Central,2020-08-08
+C0039,Redbud Pediatrics,clinic,Wichita,South Central,2022-10-21
+C0040,Gypsum Wellness Center,clinic,Pittsburg,Southeast,2022-07-31
+C0041,Heartland BBQ,restaurant,Garden City,Southwest,2020-07-07
+C0042,Prairie USD Office,school,Dodge City,Southwest,2025-10-17
+C0043,Chisholm High School,school,Topeka,Northeast,2019-11-26
+C0044,Meadowlark Learning Center,school,Garden City,Southwest,2022-08-25
+C0045,Arkalon Realty,office,Lawrence,Northeast,2021-02-13
+C0046,Solomon High School,school,Topeka,Northeast,2022-10-03
+C0047,Ninnescah Cafe,restaurant,Garden City,Southwest,2021-02-28
+C0048,Solomon Steakhouse,restaurant,Derby,South Central,2023-01-11
+C0049,Walnut Vision Care,clinic,Topeka,Northeast,2022-01-17
+C0050,Prairie Wellness Center,clinic,Hays,Northwest,2026-02-02
+C0051,Gypsum High School #2,school,Topeka,Northeast,2021-07-03
+C0052,Neosho Academy,school,Kansas City,Northeast,2019-03-16
+C0053,Walnut Family Clinic,clinic,Kansas City,Northeast,2025-07-22
+C0054,Cottonwood BBQ,restaurant,Topeka,Northeast,2023-11-03
+C0055,Sunflower Dental,clinic,Dodge City,Southwest,2019-03-26
+C0056,Konza Hardware,retail,Kansas City,Northeast,2019-10-29
+C0057,Redbud Hardware,retail,Derby,South Central,2021-11-19
+C0058,Konza Steakhouse,restaurant,Topeka,Northeast,2019-08-22
+C0059,Prairie Elementary,school,Topeka,Northeast,2021-02-04
+C0060,Smoky Hill Steakhouse,restaurant,Hutchinson,South Central,2022-10-04
+C0061,Gypsum Accounting,office,Wichita,South Central,2024-11-10
+C0062,Redbud Dental,clinic,Wichita,South Central,2020-12-18
+C0063,Cottonwood Wellness Center,clinic,Wichita,South Central,2020-12-26
+C0064,Arkalon Taqueria,restaurant,Wichita,South Central,2019-11-19
+C0065,Solomon Bistro,restaurant,Derby,South Central,2023-01-29
+C0066,Smoky Hill Shelter,nonprofit,Pittsburg,Southeast,2022-11-26
+C0067,Chisholm Diner,restaurant,Hays,Northwest,2025-05-13
+C0068,Heartland Engineering #2,office,Topeka,Northeast,2023-01-19
+C0069,Saline Emporium,retail,Salina,North Central,2020-04-14
+C0070,Konza Market,retail,Topeka,Northeast,2022-08-14
+C0071,Cedar Grill,restaurant,Kansas City,Northeast,2021-02-28
+C0072,Redbud Trading Co,retail,Salina,North Central,2019-12-15
+C0073,Gypsum Elementary,school,Wichita,South Central,2018-08-24
+C0074,Redbud Title Co,office,Dodge City,Southwest,2026-03-08
+C0075,Saline Vision Care,clinic,Topeka,Northeast,2025-03-10
+C0076,Walnut Diner,restaurant,Manhattan,Northeast,2020-01-05
+C0077,Konza Dental,clinic,Kansas City,Northeast,2022-07-29
+C0078,Bluestem Community Center,nonprofit,Wichita,South Central,2022-12-10
+C0079,Neosho Law Office,office,Kansas City,Northeast,2022-08-04
+C0080,Heartland Diner,restaurant,Wichita,South Central,2022-07-22
+C0081,Saline Taqueria,restaurant,Derby,South Central,2021-09-08
+C0082,Saline Kitchen,restaurant,Wichita,South Central,2022-09-13
+C0083,Gypsum Grill,restaurant,Wichita,South Central,2024-02-08
+C0084,Meadowlark Title Co,office,Kansas City,Northeast,2021-08-31
+C0085,Bluestem Ministries,nonprofit,Pittsburg,Southeast,2024-01-31
+C0086,Tallgrass USD Office,school,Lawrence,Northeast,2025-05-26
+C0087,Heartland Title Co,office,Salina,North Central,2019-03-29
+C0088,Heartland Grill,restaurant,Kansas City,Northeast,2019-01-15
+C0089,Prairie Grill,restaurant,Wichita,South Central,2022-03-07
+C0090,Heartland Senior Center,nonprofit,Salina,North Central,2023-01-12
+C0091,Flint Hills BBQ,restaurant,Wichita,South Central,2024-12-06
+C0092,Walnut Market,retail,Wichita,South Central,2021-07-03
+C0093,Heartland Taqueria,restaurant,Wichita,South Central,2018-10-24
+C0094,Gypsum Vision Care,clinic,Wichita,South Central,2020-08-10
+C0095,Redbud Realty,office,Wichita,South Central,2020-11-25
+C0096,Flint Hills BBQ #2,restaurant,Lawrence,Northeast,2018-08-11
+C0097,Redbud Hardware #2,retail,Kansas City,Northeast,2024-08-02
+C0098,Sunflower Diner,restaurant,Kansas City,Northeast,2023-06-11
+C0099,Heartland BBQ #2,restaurant,Kansas City,Northeast,2019-10-23
+C0100,Cottonwood Academy,school,Manhattan,Northeast,2019-09-12
+C0101,Meadowlark Market,retail,Topeka,Northeast,2018-07-17
+C0102,Prairie Mercantile,retail,Hays,Northwest,2021-06-15
+C0103,Tallgrass Realty,office,Dodge City,Southwest,2020-10-07
+C0104,Redbud Accounting,office,Kansas City,Northeast,2018-07-27
+C0105,Konza Middle School,school,Wichita,South Central,2022-09-12
+C0106,Walnut Learning Center,school,Hays,Northwest,2021-11-03
+C0107,Cottonwood BBQ #2,restaurant,Wichita,South Central,2021-10-14
+C0108,Solomon Outfitters,retail,Derby,South Central,2020-11-29
+C0109,Tallgrass Insurance,office,Kansas City,Northeast,2022-04-08
+C0110,Konza Steakhouse #2,restaurant,Topeka,Northeast,2020-04-28
+C0111,Chisholm Family Clinic,clinic,Wichita,South Central,2025-07-12
+C0112,Walnut Market #2,retail,Topeka,Northeast,2025-05-27
+C0113,Meadowlark Insurance,office,Kansas City,Northeast,2022-05-21
+C0114,Flint Hills Ministries,nonprofit,Wichita,South Central,2023-01-08
+C0115,Cedar Urgent Care #2,clinic,Kansas City,Northeast,2022-01-30
+C0116,Solomon Accounting,office,Hays,Northwest,2023-10-16
+C0117,Walnut Hardware,retail,Wichita,South Central,2020-03-13
+C0118,Gypsum Mercantile,retail,Wichita,South Central,2021-05-01
+C0119,Meadowlark Trading Co,retail,Wichita,South Central,2023-04-16
+C0120,Saline Insurance,office,Lawrence,Northeast,2020-04-27
+C0121,Walnut High School,school,Topeka,Northeast,2021-10-11
+C0122,Neosho Diner,restaurant,Kansas City,Northeast,2021-03-22
+C0123,Tallgrass Emporium,retail,Wichita,South Central,2020-09-13
+C0124,Chisholm Insurance,office,Manhattan,Northeast,2023-08-07
+C0125,Redbud Steakhouse,restaurant,Wichita,South Central,2021-03-08
+C0126,Tallgrass Outfitters,retail,Hutchinson,South Central,2022-09-07
+C0127,Smoky Hill Insurance,office,Kansas City,Northeast,2021-05-05
+C0128,Arkalon Urgent Care,clinic,Kansas City,Northeast,2021-07-13
+C0129,Flint Hills Community Center,nonprofit,Topeka,Northeast,2026-04-30
+C0130,Tallgrass Steakhouse,restaurant,Manhattan,Northeast,2021-01-26
+C0131,Bluestem Urgent Care,clinic,Garden City,Southwest,2026-01-06
+C0132,Walnut Kitchen,restaurant,Wichita,South Central,2021-05-18
+C0133,Walnut Accounting,office,Wichita,South Central,2020-03-13
+C0134,Solomon Kitchen,restaurant,Hutchinson,South Central,2022-06-05
+C0135,Tallgrass Title Co,office,Wichita,South Central,2020-09-20
+C0136,Smoky Hill Community Center,nonprofit,Manhattan,Northeast,2019-01-01
+C0137,Chisholm Wellness Center,clinic,Salina,North Central,2024-08-22
+C0138,Meadowlark Kitchen,restaurant,Salina,North Central,2018-11-26
+C0139,Cedar Middle School,school,Wichita,South Central,2020-12-01
+C0140,Ninnescah Academy,school,Hays,Northwest,2018-11-05
+C0141,Cottonwood Shelter,nonprofit,Topeka,Northeast,2019-11-03
+C0142,Neosho Emporium,retail,Kansas City,Northeast,2018-08-01
+C0143,Flint Hills Realty,office,Manhattan,Northeast,2023-11-29
+C0144,Arkalon Law Office,office,Dodge City,Southwest,2022-10-13
+C0145,Sunflower BBQ,restaurant,Wichita,South Central,2020-07-27
+C0146,Arkalon Market,retail,Wichita,South Central,2018-08-12
+C0147,Walnut Insurance,office,Hays,Northwest,2022-10-15
+C0148,Bluestem Insurance,office,Garden City,Southwest,2023-10-18
+C0149,Chisholm Youth Club,nonprofit,Topeka,Northeast,2019-02-21
+C0150,Sunflower Wellness Center,clinic,Wichita,South Central,2020-04-17
+C0151,Arkalon Vision Care,clinic,Wichita,South Central,2021-03-27
+C0152,Neosho Youth Club,nonprofit,Hutchinson,South Central,2019-07-17
+C0153,Gypsum Law Office,office,Hays,Northwest,2018-09-03
+C0154,Redbud Kitchen,restaurant,Topeka,Northeast,2020-05-07
+C0155,Solomon High School #2,school,Kansas City,Northeast,2022-11-09
+C0156,Meadowlark Diner,restaurant,Wichita,South Central,2023-06-27
+C0157,Neosho Dental,clinic,Wichita,South Central,2019-10-12
+C0158,Flint Hills Middle School,school,Wichita,South Central,2019-06-20
+C0159,Arkalon Mercantile,retail,Wichita,South Central,2023-04-26
+C0160,Solomon Cafe,restaurant,Salina,North Central,2023-03-24
+C0161,Smoky Hill Kitchen,restaurant,Salina,North Central,2022-08-22
+C0162,Smoky Hill Cafe,restaurant,Wichita,South Central,2019-12-11
+C0163,Redbud Law Office #2,office,Wichita,South Central,2021-06-24
+C0164,Smoky Hill Steakhouse #2,restaurant,Wichita,South Central,2021-01-04
+C0165,Walnut Kitchen #2,restaurant,Kansas City,Northeast,2022-07-07
+C0166,Ninnescah High School,school,Lawrence,Northeast,2021-10-02
+C0167,Konza Realty #2,office,Topeka,Northeast,2023-11-27
+C0168,Neosho Trading Co,retail,Lawrence,Northeast,2022-06-27
+C0169,Bluestem Mercantile,retail,Kansas City,Northeast,2020-05-23
+C0170,Arkalon Bistro,restaurant,Kansas City,Northeast,2020-09-23
+C0171,Tallgrass Family Clinic,clinic,Salina,North Central,2021-06-15
+C0172,Cottonwood Hardware,retail,Kansas City,Northeast,2019-12-26
+C0173,Heartland Engineering #3,office,Topeka,Northeast,2021-01-14
+C0174,Neosho Accounting,office,Hays,Northwest,2024-07-24
+C0175,Saline Steakhouse,restaurant,Garden City,Southwest,2025-01-02
+C0176,Smoky Hill Family Clinic,clinic,Wichita,South Central,2019-11-16
+C0177,Prairie Cafe,restaurant,Wichita,South Central,2023-01-10
+C0178,Bluestem Middle School,school,Lawrence,Northeast,2020-10-11
+C0179,Konza Accounting #2,office,Salina,North Central,2020-07-07
+C0180,Saline USD Office,school,Pittsburg,Southeast,2025-12-29
+C0181,Solomon High School #3,school,Hays,Northwest,2020-01-30
+C0182,Neosho Insurance #2,office,Hutchinson,South Central,2024-11-08
+C0183,Sunflower Mercantile,retail,Derby,South Central,2024-05-25
+C0184,Cedar Middle School #2,school,Salina,North Central,2020-07-19
+C0185,Gypsum Kitchen,restaurant,Garden City,Southwest,2018-09-21
+C0186,Tallgrass Diner,restaurant,Pittsburg,Southeast,2022-05-19
+C0187,Redbud Learning Center,school,Wichita,South Central,2018-08-11
+C0188,Meadowlark Elementary,school,Salina,North Central,2020-02-09
+C0189,Flint Hills Realty #2,office,Wichita,South Central,2020-01-01
+C0190,Saline Outfitters,retail,Wichita,South Central,2018-10-23
+C0191,Cottonwood Insurance,office,Kansas City,Northeast,2019-09-25
+C0192,Chisholm Trading Co,retail,Dodge City,Southwest,2021-11-13
+C0193,Neosho Mercantile,retail,Salina,North Central,2020-01-10
+C0194,Walnut Taqueria,restaurant,Wichita,South Central,2018-08-18
+C0195,Smoky Hill Mercantile,retail,Hutchinson,South Central,2021-09-05
+C0196,Smoky Hill BBQ,restaurant,Wichita,South Central,2021-07-12
+C0197,Smoky Hill Hardware,retail,Manhattan,Northeast,2022-06-11
+C0198,Chisholm Trading Co #2,retail,Wichita,South Central,2023-01-22
+C0199,Neosho Grill,restaurant,Wichita,South Central,2019-08-25
+C0200,Flint Hills Cafe,restaurant,Topeka,Northeast,2025-05-18
+C0201,Saline Emporium #2,retail,Hutchinson,South Central,2023-05-16
+C0202,Meadowlark Senior Center,nonprofit,Lawrence,Northeast,2019-07-28
+C0203,Flint Hills Title Co,office,Wichita,South Central,2019-12-28
+C0204,Walnut Law Office #2,office,Wichita,South Central,2021-11-13
+C0205,Heartland Diner #2,restaurant,Wichita,South Central,2018-08-19
+C0206,Cottonwood Diner,restaurant,Kansas City,Northeast,2023-01-17
+C0207,Arkalon Trading Co #2,retail,Kansas City,Northeast,2023-07-05
+C0208,Chisholm Cafe,restaurant,Garden City,Southwest,2023-05-21
+C0209,Meadowlark Kitchen #2,restaurant,Lawrence,Northeast,2021-11-25
+C0210,Walnut Kitchen #3,restaurant,Derby,South Central,2023-04-06
+C0211,Tallgrass Kitchen,restaurant,Garden City,Southwest,2022-12-08
+C0212,Saline Kitchen #2,restaurant,Wichita,South Central,2021-08-02
+C0213,Prairie Diner #2,restaurant,Kansas City,Northeast,2018-08-28
+C0214,Cedar Cafe,restaurant,Lawrence,Northeast,2022-06-14
+C0215,Konza Vision Care,clinic,Lawrence,Northeast,2022-12-03
+C0216,Neosho Mercantile #2,retail,Hutchinson,South Central,2026-01-04
+C0217,Redbud Kitchen #2,restaurant,Manhattan,Northeast,2020-07-30
+C0218,Saline Cafe,restaurant,Manhattan,Northeast,2024-05-05
+C0219,Gypsum Hardware #2,retail,Topeka,Northeast,2019-08-16
+C0220,Heartland Grill #2,restaurant,Hutchinson,South Central,2019-03-25
+C0221,Cottonwood Insurance #2,office,Kansas City,Northeast,2020-10-11
+C0222,Solomon Elementary,school,Garden City,Southwest,2022-04-25
+C0223,Saline BBQ,restaurant,Wichita,South Central,2023-10-12
+C0224,Heartland Taqueria #2,restaurant,Hutchinson,South Central,2023-02-25
+C0225,Chisholm Kitchen,restaurant,Lawrence,Northeast,2022-12-24
+C0226,Gypsum Dental,clinic,Topeka,Northeast,2020-03-09
+C0227,Saline Cafe #2,restaurant,Manhattan,Northeast,2020-11-22
+C0228,Konza Emporium,retail,Wichita,South Central,2021-03-20
+C0229,Meadowlark Market #2,retail,Wichita,South Central,2021-10-07
+C0230,Cottonwood Steakhouse,restaurant,Wichita,South Central,2025-03-09
+C0231,Sunflower Law Office,office,Wichita,South Central,2019-09-15
+C0232,Redbud Kitchen #3,restaurant,Wichita,South Central,2019-09-18
+C0233,Cedar Food Bank,nonprofit,Salina,North Central,2024-06-06
+C0234,Smoky Hill Taqueria,restaurant,Kansas City,Northeast,2024-10-01
+C0235,Saline Vision Care #2,clinic,Salina,North Central,2024-12-30
+C0236,Flint Hills Steakhouse,restaurant,Lawrence,Northeast,2024-08-16
+C0237,Neosho Engineering,office,Wichita,South Central,2021-06-22
+C0238,Cedar Insurance,office,Wichita,South Central,2018-08-08
+C0239,Solomon Engineering,office,Derby,South Central,2019-02-14
+C0240,Bluestem High School,school,Garden City,Southwest,2020-06-21
+C0241,Meadowlark Dental,clinic,Wichita,South Central,2022-07-01
+C0242,Neosho Cafe #2,restaurant,Topeka,Northeast,2019-01-18
+C0243,Cottonwood Bistro,restaurant,Wichita,South Central,2021-11-10
+C0244,Heartland Youth Club,nonprofit,Wichita,South Central,2022-11-20
+C0245,Gypsum Academy,school,Kansas City,Northeast,2019-03-28
+C0246,Bluestem Realty,office,Wichita,South Central,2022-05-04
+C0247,Sunflower Cafe,restaurant,Topeka,Northeast,2020-10-08
+C0248,Solomon Realty,office,Wichita,South Central,2019-07-21
+C0249,Chisholm Engineering,office,Topeka,Northeast,2020-01-18
+C0250,Solomon Food Bank,nonprofit,Hutchinson,South Central,2021-10-17
+C0251,Neosho Bistro #2,restaurant,Dodge City,Southwest,2020-02-09
+C0252,Gypsum Law Office #2,office,Hutchinson,South Central,2020-01-31
+C0253,Heartland Grill #3,restaurant,Derby,South Central,2023-05-03
+C0254,Arkalon Title Co,office,Hutchinson,South Central,2024-03-10
+C0255,Saline Emporium #3,retail,Salina,North Central,2022-11-01
+C0256,Gypsum Title Co,office,Wichita,South Central,2023-10-10
+C0257,Tallgrass Bistro,restaurant,Manhattan,Northeast,2020-01-10
+C0258,Smoky Hill Steakhouse #3,restaurant,Wichita,South Central,2020-05-14
+C0259,Prairie Taqueria,restaurant,Wichita,South Central,2020-10-09
+C0260,Sunflower Engineering,office,Wichita,South Central,2020-12-26
+C0261,Meadowlark Vision Care,clinic,Dodge City,Southwest,2018-09-14
+C0262,Cedar Insurance #2,office,Wichita,South Central,2020-09-21
+C0263,Cedar Steakhouse,restaurant,Garden City,Southwest,2023-03-11
+C0264,Prairie Engineering,office,Salina,North Central,2020-04-17
+C0265,Heartland Law Office,office,Dodge City,Southwest,2023-09-08
+C0266,Chisholm Vision Care,clinic,Pittsburg,Southeast,2019-04-13
+C0267,Smoky Hill Ministries,nonprofit,Pittsburg,Southeast,2021-10-19
+C0268,Chisholm High School #2,school,Salina,North Central,2018-07-21
+C0269,Tallgrass Diner #2,restaurant,Derby,South Central,2023-02-06
+C0270,Flint Hills Taqueria,restaurant,Wichita,South Central,2021-12-31
+C0271,Heartland Trading Co #2,retail,Wichita,South Central,2019-01-12
+C0272,Sunflower Senior Center,nonprofit,Salina,North Central,2020-06-30
+C0273,Saline Elementary,school,Wichita,South Central,2025-01-07
+C0274,Heartland Trading Co #3,retail,Hays,Northwest,2020-05-01
+C0275,Bluestem Pediatrics,clinic,Wichita,South Central,2018-07-24
+C0276,Bluestem Kitchen,restaurant,Kansas City,Northeast,2021-10-25
+C0277,Cottonwood High School,school,Salina,North Central,2022-06-15
+C0278,Flint Hills Kitchen,restaurant,Kansas City,Northeast,2020-06-04
+C0279,Smoky Hill Title Co,office,Wichita,South Central,2020-12-25
+C0280,Walnut Kitchen #4,restaurant,Hays,Northwest,2019-08-06
+C0281,Chisholm Emporium,retail,Lawrence,Northeast,2025-04-07
+C0282,Flint Hills BBQ #3,restaurant,Hutchinson,South Central,2020-09-27
+C0283,Redbud Vision Care,clinic,Wichita,South Central,2018-12-21
+C0284,Walnut High School #2,school,Wichita,South Central,2025-07-06
+C0285,Ninnescah Grill,restaurant,Garden City,Southwest,2019-11-30
+C0286,Cedar Outfitters,retail,Kansas City,Northeast,2020-07-04
+C0287,Redbud Trading Co #2,retail,Hutchinson,South Central,2022-06-24
+C0288,Heartland Trading Co #4,retail,Derby,South Central,2025-01-02
+C0289,Heartland Urgent Care,clinic,Kansas City,Northeast,2019-03-25
+C0290,Tallgrass BBQ,restaurant,Manhattan,Northeast,2020-07-10
+C0291,Cottonwood Wellness Center #2,clinic,Wichita,South Central,2018-10-30
+C0292,Flint Hills Market,retail,Hays,Northwest,2019-05-23
+C0293,Walnut Food Bank,nonprofit,Garden City,Southwest,2023-10-14
+C0294,Walnut Law Office #3,office,Topeka,Northeast,2020-10-30
+C0295,Ninnescah Bistro,restaurant,Wichita,South Central,2018-09-02
+C0296,Gypsum Law Office #3,office,Salina,North Central,2025-12-23
+C0297,Bluestem Food Bank,nonprofit,Manhattan,Northeast,2021-06-03
+C0298,Saline Learning Center,school,Wichita,South Central,2019-02-01
+C0299,Bluestem Market,retail,Wichita,South Central,2018-08-16
+C0300,Chisholm Trading Co #3,retail,Lawrence,Northeast,2022-10-27
+C0301,Chisholm Steakhouse,restaurant,Wichita,South Central,2019-07-26
+C0302,Redbud Diner,restaurant,Kansas City,Northeast,2020-11-27
+C0303,Konza Diner,restaurant,Kansas City,Northeast,2019-06-02
+C0304,Walnut Steakhouse #2,restaurant,Pittsburg,Southeast,2019-01-12
+C0305,Cottonwood Kitchen,restaurant,Dodge City,Southwest,2019-05-14
+C0306,Meadowlark Dental #2,clinic,Dodge City,Southwest,2023-11-07
+C0307,Gypsum Learning Center,school,Wichita,South Central,2023-04-10
+C0308,Chisholm Kitchen #2,restaurant,Manhattan,Northeast,2021-11-20
+C0309,Cottonwood Middle School,school,Manhattan,Northeast,2022-09-05
+C0310,Cedar Middle School #3,school,Derby,South Central,2023-01-31
+C0311,Arkalon Bistro #2,restaurant,Manhattan,Northeast,2018-08-15
+C0312,Solomon Grill,restaurant,Hays,Northwest,2019-10-01
+C0313,Konza Youth Club,nonprofit,Derby,South Central,2023-05-06
+C0314,Neosho USD Office #2,school,Salina,North Central,2023-10-09
+C0315,Cedar BBQ,restaurant,Hutchinson,South Central,2023-03-16
+C0316,Flint Hills Emporium,retail,Wichita,South Central,2022-02-08
+C0317,Smoky Hill Bistro,restaurant,Kansas City,Northeast,2019-12-13
+C0318,Prairie Engineering #2,office,Derby,South Central,2019-09-15
+C0319,Smoky Hill Hardware #2,retail,Topeka,Northeast,2019-08-06
+C0320,Sunflower Hardware,retail,Wichita,South Central,2024-03-17
+C0321,Konza Urgent Care,clinic,Salina,North Central,2019-01-20
+C0322,Redbud Diner #2,restaurant,Pittsburg,Southeast,2020-04-06
+C0323,Meadowlark Insurance #2,office,Derby,South Central,2020-06-18
+C0324,Cottonwood Middle School #2,school,Kansas City,Northeast,2020-05-10
+C0325,Gypsum Grill #2,restaurant,Kansas City,Northeast,2020-09-11
+C0326,Prairie Cafe #2,restaurant,Wichita,South Central,2020-04-16
+C0327,Walnut Steakhouse #3,restaurant,Wichita,South Central,2023-01-15
+C0328,Chisholm Hardware #3,retail,Dodge City,Southwest,2022-01-13
+C0329,Walnut Accounting #2,office,Kansas City,Northeast,2018-11-28
+C0330,Ninnescah Taqueria,restaurant,Kansas City,Northeast,2020-04-05
+C0331,Bluestem Kitchen #2,restaurant,Garden City,Southwest,2018-09-12
+C0332,Sunflower Bistro,restaurant,Wichita,South Central,2018-07-30
+C0333,Redbud Pediatrics #2,clinic,Kansas City,Northeast,2020-11-14
+C0334,Chisholm Kitchen #3,restaurant,Salina,North Central,2026-03-28
+C0335,Walnut Learning Center #2,school,Hutchinson,South Central,2019-12-16
+C0336,Konza Trading Co,retail,Lawrence,Northeast,2025-07-23
+C0337,Konza Kitchen,restaurant,Topeka,Northeast,2026-02-28
+C0338,Chisholm Vision Care #2,clinic,Derby,South Central,2019-08-12
+C0339,Sunflower Pediatrics,clinic,Derby,South Central,2022-05-13
+C0340,Neosho Realty,office,Hutchinson,South Central,2021-07-29
+C0341,Tallgrass Law Office,office,Wichita,South Central,2019-04-29
+C0342,Saline Urgent Care,clinic,Salina,North Central,2024-07-11
+C0343,Arkalon Pediatrics,clinic,Kansas City,Northeast,2021-06-24
+C0344,Sunflower Elementary,school,Garden City,Southwest,2018-11-11
+C0345,Arkalon Urgent Care #2,clinic,Kansas City,Northeast,2025-08-19
+C0346,Prairie Wellness Center #2,clinic,Kansas City,Northeast,2019-02-24
+C0347,Prairie Urgent Care,clinic,Hutchinson,South Central,2019-09-19
+C0348,Heartland USD Office,school,Wichita,South Central,2019-02-21
+C0349,Prairie High School,school,Topeka,Northeast,2021-04-25
+C0350,Redbud Bistro,restaurant,Wichita,South Central,2025-05-17
+C0351,Smoky Hill Wellness Center,clinic,Kansas City,Northeast,2020-07-25
+C0352,Bluestem Emporium,retail,Topeka,Northeast,2024-09-05
+C0353,Redbud Realty #2,office,Kansas City,Northeast,2023-06-29
+C0354,Tallgrass Steakhouse #2,restaurant,Garden City,Southwest,2023-03-12
+C0355,Bluestem Pediatrics #2,clinic,Salina,North Central,2021-04-07
+C0356,Solomon Steakhouse #2,restaurant,Wichita,South Central,2018-08-16
+C0357,Tallgrass Middle School,school,Manhattan,Northeast,2022-01-16
+C0358,Walnut BBQ,restaurant,Wichita,South Central,2024-08-17
+C0359,Flint Hills Taqueria #2,restaurant,Kansas City,Northeast,2018-09-21
+C0360,Smoky Hill Cafe #2,restaurant,Hutchinson,South Central,2021-02-05
+C0361,Prairie Kitchen,restaurant,Kansas City,Northeast,2022-12-13
+C0362,Gypsum Steakhouse,restaurant,Kansas City,Northeast,2019-03-12
+C0363,Redbud Trading Co #3,retail,Wichita,South Central,2021-07-31
+C0364,Cedar Accounting,office,Wichita,South Central,2021-10-14
+C0365,Neosho Realty #2,office,Topeka,Northeast,2019-09-09
+C0366,Bluestem Senior Center,nonprofit,Wichita,South Central,2020-06-09
+C0367,Prairie Taqueria #2,restaurant,Wichita,South Central,2023-04-18
+C0368,Neosho Grill #2,restaurant,Lawrence,Northeast,2023-01-21
+C0369,Sunflower BBQ #2,restaurant,Salina,North Central,2019-10-14
+C0370,Ninnescah Steakhouse,restaurant,Dodge City,Southwest,2021-03-19
+C0371,Flint Hills Realty #3,office,Kansas City,Northeast,2022-09-29
+C0372,Tallgrass Taqueria,restaurant,Lawrence,Northeast,2022-04-05
+C0373,Neosho Insurance #3,office,Kansas City,Northeast,2023-12-07
+C0374,Smoky Hill Kitchen #2,restaurant,Wichita,South Central,2026-02-22
+C0375,Konza Family Clinic,clinic,Wichita,South Central,2022-01-09
+C0376,Walnut Realty,office,Wichita,South Central,2022-01-22
+C0377,Sunflower Outfitters,retail,Wichita,South Central,2022-07-14
+C0378,Neosho Dental #2,clinic,Hays,Northwest,2020-07-07
+C0379,Ninnescah Vision Care,clinic,Salina,North Central,2019-08-16
+C0380,Sunflower Steakhouse,restaurant,Wichita,South Central,2022-05-15
+C0381,Heartland Diner #3,restaurant,Lawrence,Northeast,2021-04-10
+C0382,Konza Accounting #3,office,Salina,North Central,2020-05-12
+C0383,Redbud Family Clinic,clinic,Kansas City,Northeast,2020-02-26
+C0384,Bluestem Food Bank #2,nonprofit,Wichita,South Central,2022-05-06
+C0385,Solomon Vision Care,clinic,Salina,North Central,2019-11-17
+C0386,Walnut Middle School,school,Pittsburg,Southeast,2025-11-07
+C0387,Arkalon BBQ,restaurant,Manhattan,Northeast,2023-12-20
+C0388,Walnut Mercantile,retail,Kansas City,Northeast,2021-07-11
+C0389,Solomon Title Co,office,Topeka,Northeast,2021-04-06
+C0390,Meadowlark Trading Co #2,retail,Salina,North Central,2018-11-21
+C0391,Neosho Cafe #3,restaurant,Salina,North Central,2021-10-08
+C0392,Cedar Dental,clinic,Dodge City,Southwest,2018-08-17
+C0393,Ninnescah Hardware,retail,Manhattan,Northeast,2019-12-22
+C0394,Redbud Urgent Care,clinic,Topeka,Northeast,2020-04-03
+C0395,Konza Trading Co #2,retail,Wichita,South Central,2023-02-22
+C0396,Saline Taqueria #2,restaurant,Topeka,Northeast,2021-06-24
+C0397,Arkalon Kitchen,restaurant,Manhattan,Northeast,2020-08-18
+C0398,Cedar Grill #2,restaurant,Hays,Northwest,2023-06-05
+C0399,Smoky Hill Vision Care,clinic,Garden City,Southwest,2023-05-18
+C0400,Heartland Realty,office,Wichita,South Central,2021-01-23
+C0401,Cedar Bistro,restaurant,Garden City,Southwest,2023-08-14
+C0402,Flint Hills Insurance,office,Topeka,Northeast,2019-05-03
+C0403,Smoky Hill Emporium,retail,Wichita,South Central,2020-11-16
+C0404,Bluestem Insurance #2,office,Garden City,Southwest,2022-06-18
+C0405,Cedar Kitchen,restaurant,Wichita,South Central,2019-09-20
+C0406,Smoky Hill Accounting,office,Hutchinson,South Central,2024-08-02
+C0407,Prairie Grill #2,restaurant,Lawrence,Northeast,2019-02-10
+C0408,Neosho Food Bank,nonprofit,Garden City,Southwest,2019-08-17
+C0409,Cottonwood Kitchen #2,restaurant,Salina,North Central,2019-01-16
+C0410,Arkalon Mercantile #2,retail,Kansas City,Northeast,2023-01-19
+C0411,Saline Bistro,restaurant,Pittsburg,Southeast,2019-07-20
+C0412,Walnut Emporium,retail,Wichita,South Central,2020-10-17
+C0413,Cottonwood High School #2,school,Topeka,Northeast,2021-10-25
+C0414,Cottonwood Cafe,restaurant,Topeka,Northeast,2020-05-16
+C0415,Cottonwood Grill,restaurant,Pittsburg,Southeast,2022-08-28
+C0416,Tallgrass Dental #2,clinic,Garden City,Southwest,2021-07-06
+C0417,Sunflower Hardware #2,retail,Garden City,Southwest,2023-05-16
+C0418,Sunflower Realty #2,office,Manhattan,Northeast,2022-05-30
+C0419,Saline Kitchen #3,restaurant,Hays,Northwest,2019-11-24
+C0420,Cedar Kitchen #2,restaurant,Manhattan,Northeast,2022-08-16
+C0421,Heartland Senior Center #2,nonprofit,Wichita,South Central,2022-03-10
+C0422,Cedar Grill #3,restaurant,Topeka,Northeast,2019-06-03
+C0423,Chisholm Vision Care #3,clinic,Lawrence,Northeast,2022-09-12
+C0424,Heartland Vision Care,clinic,Topeka,Northeast,2021-04-19
+C0425,Walnut Diner #2,restaurant,Wichita,South Central,2020-10-10
+C0426,Gypsum High School #3,school,Hutchinson,South Central,2018-10-24
+C0427,Cedar USD Office,school,Salina,North Central,2022-05-25
+C0428,Walnut Grill,restaurant,Wichita,South Central,2025-01-21
+C0429,Prairie Insurance #2,office,Manhattan,Northeast,2019-03-08
+C0430,Konza Realty #3,office,Salina,North Central,2020-11-08
+C0431,Tallgrass Taqueria #2,restaurant,Manhattan,Northeast,2024-06-05
+C0432,Cedar Grill #4,restaurant,Kansas City,Northeast,2024-08-14
+C0433,Redbud Vision Care #2,clinic,Hays,Northwest,2019-10-19
+C0434,Meadowlark Dental #3,clinic,Topeka,Northeast,2019-11-19
+C0435,Walnut Family Clinic #2,clinic,Hays,Northwest,2020-06-21
+C0436,Redbud Wellness Center,clinic,Wichita,South Central,2019-11-18
+C0437,Smoky Hill Ministries #2,nonprofit,Kansas City,Northeast,2020-01-17
+C0438,Konza Senior Center,nonprofit,Kansas City,Northeast,2022-02-15
+C0439,Saline Steakhouse #2,restaurant,Kansas City,Northeast,2020-03-14
+C0440,Meadowlark Youth Club,nonprofit,Hutchinson,South Central,2021-09-15
+C0441,Neosho Grill #3,restaurant,Wichita,South Central,2019-08-15
+C0442,Konza Family Clinic #2,clinic,Lawrence,Northeast,2022-08-05
+C0443,Cedar Vision Care,clinic,Kansas City,Northeast,2021-03-01
+C0444,Chisholm Bistro,restaurant,Hays,Northwest,2021-01-19
+C0445,Arkalon Learning Center,school,Topeka,Northeast,2019-07-20
+C0446,Bluestem Accounting,office,Hays,Northwest,2018-09-07
+C0447,Arkalon Grill,restaurant,Garden City,Southwest,2018-11-21
+C0448,Konza Accounting #4,office,Wichita,South Central,2021-08-02
+C0449,Meadowlark BBQ,restaurant,Hutchinson,South Central,2020-11-18
+C0450,Bluestem Trading Co,retail,Wichita,South Central,2023-03-10
+C0451,Cottonwood Engineering,office,Pittsburg,Southeast,2020-01-29
+C0452,Prairie Hardware,retail,Wichita,South Central,2021-01-31
+C0453,Meadowlark Trading Co #3,retail,Wichita,South Central,2021-05-16
+C0454,Neosho Accounting #2,office,Derby,South Central,2022-05-05
+C0455,Tallgrass BBQ #2,restaurant,Hutchinson,South Central,2019-11-20
+C0456,Tallgrass Market,retail,Wichita,South Central,2021-05-07
+C0457,Meadowlark Market #3,retail,Hutchinson,South Central,2019-06-27
+C0458,Smoky Hill High School,school,Derby,South Central,2020-08-27
+C0459,Konza Emporium #2,retail,Wichita,South Central,2021-01-14
+C0460,Walnut Engineering,office,Wichita,South Central,2021-11-23
+C0461,Saline Trading Co,retail,Wichita,South Central,2022-03-25
+C0462,Tallgrass Grill,restaurant,Wichita,South Central,2020-01-07
+C0463,Konza Vision Care #2,clinic,Derby,South Central,2020-04-21
+C0464,Saline Academy,school,Wichita,South Central,2021-12-15
+C0465,Chisholm Accounting,office,Wichita,South Central,2018-09-11
+C0466,Heartland Title Co #2,office,Dodge City,Southwest,2021-03-27
+C0467,Konza Title Co,office,Lawrence,Northeast,2024-04-05
+C0468,Cottonwood Dental,clinic,Wichita,South Central,2018-11-30
+C0469,Gypsum Title Co #2,office,Salina,North Central,2022-05-23
+C0470,Prairie Dental,clinic,Kansas City,Northeast,2020-02-03
+C0471,Cedar Taqueria,restaurant,Pittsburg,Southeast,2023-02-09
+C0472,Walnut Outfitters,retail,Kansas City,Northeast,2021-04-20
+C0473,Chisholm Learning Center,school,Wichita,South Central,2018-10-03
+C0474,Smoky Hill Cafe #3,restaurant,Topeka,Northeast,2023-05-04
+C0475,Heartland Steakhouse,restaurant,Salina,North Central,2020-04-18
+C0476,Gypsum Taqueria,restaurant,Wichita,South Central,2022-06-22
+C0477,Arkalon Cafe,restaurant,Kansas City,Northeast,2019-04-15
+C0478,Redbud Grill,restaurant,Salina,North Central,2022-02-27
+C0479,Prairie Cafe #3,restaurant,Topeka,Northeast,2020-05-25
+C0480,Solomon Bistro #2,restaurant,Salina,North Central,2019-05-07
+C0481,Heartland Emporium,retail,Kansas City,Northeast,2018-10-12
+C0482,Prairie Taqueria #3,restaurant,Manhattan,Northeast,2018-08-13
+C0483,Heartland USD Office #2,school,Lawrence,Northeast,2022-01-02
+C0484,Flint Hills Engineering,office,Derby,South Central,2021-12-18
+C0485,Cedar Market,retail,Hutchinson,South Central,2023-02-14
+C0486,Solomon Engineering #2,office,Kansas City,Northeast,2021-02-04
+C0487,Redbud Trading Co #4,retail,Wichita,South Central,2026-01-20
+C0488,Redbud Engineering,office,Wichita,South Central,2022-01-05
+C0489,Konza Engineering,office,Wichita,South Central,2020-12-14
+C0490,Ninnescah Academy #2,school,Wichita,South Central,2025-03-13
+C0491,Redbud Mercantile,retail,Topeka,Northeast,2018-10-31
+C0492,Flint Hills Steakhouse #2,restaurant,Dodge City,Southwest,2020-04-15
+C0493,Redbud Outfitters,retail,Salina,North Central,2022-05-30
+C0494,Cedar Kitchen #3,restaurant,Derby,South Central,2021-07-16
+C0495,Ninnescah Engineering,office,Kansas City,Northeast,2021-12-03
+C0496,Smoky Hill Ministries #3,nonprofit,Derby,South Central,2020-09-27
+C0497,Prairie Market,retail,Garden City,Southwest,2020-03-31
+C0498,Flint Hills Market #2,retail,Wichita,South Central,2019-01-27
+C0499,Heartland Market,retail,Lawrence,Northeast,2020-04-20
+C0500,Solomon Grill #2,restaurant,Wichita,South Central,2025-01-26
+C0501,Ninnescah Dental,clinic,Kansas City,Northeast,2021-05-12
+C0502,Prairie Learning Center,school,Salina,North Central,2021-11-04
+C0503,Solomon Grill #3,restaurant,Kansas City,Northeast,2024-09-11
+C0504,Neosho Shelter,nonprofit,Hays,Northwest,2020-03-04
+C0505,Cedar Grill #5,restaurant,Topeka,Northeast,2026-05-20
+C0506,Neosho Trading Co #2,retail,Kansas City,Northeast,2020-11-03
+C0507,Ninnescah Emporium,retail,Wichita,South Central,2018-09-18
+C0508,Neosho Accounting #3,office,Manhattan,Northeast,2022-06-23
+C0509,Solomon Bistro #3,restaurant,Garden City,Southwest,2025-02-09
+C0510,Chisholm Engineering #2,office,Garden City,Southwest,2021-12-05
+C0511,Prairie Kitchen #2,restaurant,Topeka,Northeast,2022-04-11
+C0512,Neosho Law Office #2,office,Hays,Northwest,2021-10-03
+C0513,Saline Middle School,school,Topeka,Northeast,2022-01-05
+C0514,Smoky Hill Dental,clinic,Kansas City,Northeast,2021-07-27
+C0515,Konza BBQ,restaurant,Kansas City,Northeast,2019-02-28
+C0516,Chisholm Bistro #2,restaurant,Kansas City,Northeast,2023-02-12
+C0517,Cottonwood Taqueria,restaurant,Wichita,South Central,2018-12-04
+C0518,Sunflower Outfitters #2,retail,Wichita,South Central,2020-10-20
+C0519,Walnut Market #3,retail,Salina,North Central,2025-01-14
+C0520,Walnut Bistro,restaurant,Wichita,South Central,2018-07-18
+C0521,Chisholm Grill,restaurant,Wichita,South Central,2025-03-24
+C0522,Saline Diner #2,restaurant,Hays,Northwest,2019-01-08
+C0523,Prairie Bistro,restaurant,Lawrence,Northeast,2020-06-01
+C0524,Prairie Outfitters,retail,Wichita,South Central,2026-03-04
+C0525,Redbud Outfitters #2,retail,Kansas City,Northeast,2023-12-28
+C0526,Tallgrass Title Co #2,office,Garden City,Southwest,2019-08-08
+C0527,Arkalon Urgent Care #3,clinic,Hutchinson,South Central,2025-12-10
+C0528,Chisholm Middle School,school,Derby,South Central,2022-09-14
+C0529,Neosho Engineering #2,office,Kansas City,Northeast,2019-08-20
+C0530,Smoky Hill Steakhouse #4,restaurant,Derby,South Central,2018-09-30
+C0531,Flint Hills Diner,restaurant,Hays,Northwest,2023-02-28
+C0532,Heartland USD Office #3,school,Hutchinson,South Central,2022-11-17
+C0533,Arkalon Learning Center #2,school,Wichita,South Central,2024-11-14
+C0534,Redbud Realty #3,office,Hays,Northwest,2020-11-29
+C0535,Solomon Academy,school,Wichita,South Central,2021-10-13
+C0536,Heartland Grill #4,restaurant,Lawrence,Northeast,2026-02-15
+C0537,Chisholm USD Office,school,Kansas City,Northeast,2021-09-18
+C0538,Arkalon BBQ #2,restaurant,Garden City,Southwest,2019-07-11
+C0539,Sunflower Engineering #2,office,Wichita,South Central,2020-03-23
+C0540,Smoky Hill Pediatrics,clinic,Wichita,South Central,2020-05-30
+C0541,Saline Trading Co #2,retail,Derby,South Central,2024-06-24
+C0542,Cottonwood Hardware #2,retail,Wichita,South Central,2019-02-12
+C0543,Tallgrass Diner #3,restaurant,Salina,North Central,2023-07-29
+C0544,Solomon Market,retail,Manhattan,Northeast,2021-06-19
+C0545,Redbud Steakhouse #2,restaurant,Wichita,South Central,2020-12-03
+C0546,Walnut Grill #2,restaurant,Derby,South Central,2019-05-14
+C0547,Cottonwood USD Office,school,Hays,Northwest,2023-03-16
+C0548,Arkalon Taqueria #2,restaurant,Garden City,Southwest,2021-12-21
+C0549,Walnut Diner #3,restaurant,Wichita,South Central,2021-04-21
+C0550,Saline Market,retail,Topeka,Northeast,2023-06-27
+C0551,Bluestem Dental,clinic,Topeka,Northeast,2022-06-05
+C0552,Meadowlark Cafe,restaurant,Wichita,South Central,2022-10-08
+C0553,Konza Market #2,retail,Lawrence,Northeast,2021-08-17
+C0554,Redbud Pediatrics #3,clinic,Garden City,Southwest,2021-04-02
+C0555,Heartland Ministries,nonprofit,Wichita,South Central,2018-08-21
+C0556,Cedar Middle School #4,school,Wichita,South Central,2022-05-09
+C0557,Saline Outfitters #2,retail,Dodge City,Southwest,2021-04-16
+C0558,Tallgrass Hardware,retail,Hays,Northwest,2022-05-26
+C0559,Saline Diner #3,restaurant,Kansas City,Northeast,2023-03-11
+C0560,Walnut Dental,clinic,Lawrence,Northeast,2023-04-27
+C0561,Tallgrass Kitchen #2,restaurant,Topeka,Northeast,2022-12-22
+C0562,Walnut Academy,school,Salina,North Central,2021-11-18
+C0563,Arkalon Outfitters #2,retail,Kansas City,Northeast,2019-11-04
+C0564,Konza Trading Co #3,retail,Wichita,South Central,2021-05-08
+C0565,Prairie Hardware #2,retail,Wichita,South Central,2020-03-05
+C0566,Neosho Urgent Care,clinic,Salina,North Central,2020-07-25
+C0567,Meadowlark Diner #2,restaurant,Garden City,Southwest,2018-09-08
+C0568,Solomon Outfitters #2,retail,Garden City,Southwest,2020-12-28
+C0569,Bluestem Market #2,retail,Wichita,South Central,2021-04-03
+C0570,Gypsum Title Co #3,office,Salina,North Central,2018-12-22
+C0571,Meadowlark Middle School,school,Kansas City,Northeast,2019-12-10
+C0572,Gypsum Insurance,office,Dodge City,Southwest,2022-01-07
+C0573,Saline Vision Care #3,clinic,Wichita,South Central,2024-07-14
+C0574,Heartland Cafe,restaurant,Wichita,South Central,2020-01-09
+C0575,Arkalon Mercantile #3,retail,Wichita,South Central,2019-05-29
+C0576,Bluestem Elementary #2,school,Wichita,South Central,2019-06-19
+C0577,Flint Hills Diner #2,restaurant,Lawrence,Northeast,2021-04-10
+C0578,Redbud Urgent Care #2,clinic,Wichita,South Central,2022-09-28
+C0579,Cottonwood Cafe #2,restaurant,Wichita,South Central,2018-07-06
+C0580,Smoky Hill Grill,restaurant,Garden City,Southwest,2023-03-01
+C0581,Tallgrass Vision Care,clinic,Lawrence,Northeast,2024-07-17
+C0582,Ninnescah Grill #2,restaurant,Wichita,South Central,2025-12-23
+C0583,Meadowlark Realty,office,Wichita,South Central,2024-11-01
+C0584,Tallgrass Realty #2,office,Wichita,South Central,2019-06-20
+C0585,Smoky Hill Hardware #3,retail,Wichita,South Central,2019-12-29
+C0586,Tallgrass Steakhouse #3,restaurant,Manhattan,Northeast,2021-10-26
+C0587,Cedar USD Office #2,school,Kansas City,Northeast,2019-11-21
+C0588,Tallgrass Cafe,restaurant,Hays,Northwest,2022-01-04
+C0589,Sunflower Diner #2,restaurant,Lawrence,Northeast,2023-01-23
+C0590,Neosho Youth Club #2,nonprofit,Pittsburg,Southeast,2021-12-15
+C0591,Cedar Engineering,office,Manhattan,Northeast,2021-10-01
+C0592,Saline Mercantile,retail,Kansas City,Northeast,2021-11-03
+C0593,Saline Diner #4,restaurant,Derby,South Central,2022-01-09
+C0594,Prairie Taqueria #4,restaurant,Wichita,South Central,2021-07-05
+C0595,Cedar Trading Co #2,retail,Kansas City,Northeast,2020-04-26
+C0596,Ninnescah Steakhouse #2,restaurant,Topeka,Northeast,2020-09-10
+C0597,Gypsum Middle School,school,Hutchinson,South Central,2020-09-04
+C0598,Gypsum Title Co #4,office,Derby,South Central,2022-03-14
+C0599,Ninnescah Insurance,office,Garden City,Southwest,2020-07-27
+C0600,Walnut Accounting #3,office,Wichita,South Central,2023-06-03
+C0601,Prairie Wellness Center #3,clinic,Hays,Northwest,2023-01-11
+C0602,Prairie BBQ,restaurant,Kansas City,Northeast,2019-07-03
+C0603,Cottonwood BBQ #3,restaurant,Kansas City,Northeast,2019-06-21
+C0604,Ninnescah Market,retail,Topeka,Northeast,2019-05-16
+C0605,Konza Family Clinic #3,clinic,Hays,Northwest,2023-11-14
+C0606,Solomon Engineering #3,office,Dodge City,Southwest,2022-05-31
+C0607,Tallgrass Title Co #3,office,Hutchinson,South Central,2022-07-25
+C0608,Flint Hills Engineering #2,office,Salina,North Central,2021-03-03
+C0609,Cedar Bistro #2,restaurant,Derby,South Central,2022-03-28
+C0610,Cottonwood Wellness Center #3,clinic,Pittsburg,Southeast,2018-12-31
+C0611,Cottonwood Realty,office,Salina,North Central,2021-05-15
+C0612,Konza Community Center,nonprofit,Kansas City,Northeast,2024-09-13
+C0613,Bluestem High School #2,school,Salina,North Central,2020-11-18
+C0614,Neosho Pediatrics,clinic,Wichita,South Central,2025-12-21
+C0615,Meadowlark Family Clinic,clinic,Wichita,South Central,2021-12-16
+C0616,Smoky Hill USD Office,school,Wichita,South Central,2019-04-02
+C0617,Redbud Pediatrics #4,clinic,Manhattan,Northeast,2018-11-15
+C0618,Meadowlark Pediatrics,clinic,Topeka,Northeast,2021-04-02
+C0619,Sunflower Realty #3,office,Wichita,South Central,2020-01-16
+C0620,Tallgrass Hardware #2,retail,Wichita,South Central,2022-04-02
+C0621,Heartland Wellness Center,clinic,Lawrence,Northeast,2019-05-30
+C0622,Solomon Food Bank #2,nonprofit,Manhattan,Northeast,2024-04-16
+C0623,Arkalon Market #2,retail,Dodge City,Southwest,2022-04-29
+C0624,Chisholm High School #3,school,Kansas City,Northeast,2019-09-07
+C0625,Sunflower Law Office #2,office,Wichita,South Central,2025-11-02
+C0626,Heartland Diner #4,restaurant,Hays,Northwest,2019-04-04
+C0627,Prairie Engineering #3,office,Wichita,South Central,2024-06-13
+C0628,Cottonwood Grill #2,restaurant,Kansas City,Northeast,2020-12-10
+C0629,Cottonwood Ministries,nonprofit,Kansas City,Northeast,2025-04-06
+C0630,Redbud Dental #2,clinic,Topeka,Northeast,2019-06-10
+C0631,Cottonwood USD Office #2,school,Hays,Northwest,2022-07-11
+C0632,Cedar Insurance #3,office,Topeka,Northeast,2021-04-09
+C0633,Cedar Elementary,school,Topeka,Northeast,2020-02-02
+C0634,Prairie Grill #3,restaurant,Hutchinson,South Central,2019-06-19
+C0635,Cottonwood Realty #2,office,Lawrence,Northeast,2019-09-16
+C0636,Cedar USD Office #3,school,Topeka,Northeast,2026-04-06
+C0637,Smoky Hill Trading Co,retail,Kansas City,Northeast,2021-06-26
+C0638,Konza Shelter,nonprofit,Kansas City,Northeast,2020-01-28
+C0639,Flint Hills BBQ #4,restaurant,Hays,Northwest,2022-05-19
+C0640,Cedar Insurance #4,office,Derby,South Central,2022-05-14
+C0641,Heartland Food Bank,nonprofit,Wichita,South Central,2022-06-19
+C0642,Konza Wellness Center,clinic,Topeka,Northeast,2020-05-19
+C0643,Konza Diner #2,restaurant,Hutchinson,South Central,2021-04-06
+C0644,Solomon USD Office,school,Derby,South Central,2022-09-01
+C0645,Smoky Hill Kitchen #3,restaurant,Salina,North Central,2023-01-22
+C0646,Arkalon USD Office,school,Lawrence,Northeast,2023-06-24
+C0647,Bluestem Title Co,office,Manhattan,Northeast,2019-03-19
+C0648,Cedar Trading Co #3,retail,Topeka,Northeast,2023-01-26
+C0649,Bluestem Middle School #2,school,Wichita,South Central,2026-04-22
+C0650,Gypsum Wellness Center #2,clinic,Hays,Northwest,2022-11-23
+C0651,Bluestem Market #3,retail,Hays,Northwest,2020-06-12
+C0652,Saline Market #2,retail,Lawrence,Northeast,2021-08-23
+C0653,Walnut Grill #3,restaurant,Pittsburg,Southeast,2019-09-19
+C0654,Heartland Trading Co #5,retail,Salina,North Central,2020-12-15
+C0655,Saline Taqueria #3,restaurant,Derby,South Central,2023-05-26
+C0656,Tallgrass Outfitters #2,retail,Wichita,South Central,2024-07-10
+C0657,Redbud Shelter,nonprofit,Hays,Northwest,2020-06-19
+C0658,Konza Grill,restaurant,Kansas City,Northeast,2021-10-15
+C0659,Ninnescah Wellness Center,clinic,Lawrence,Northeast,2023-07-26
+C0660,Meadowlark Hardware,retail,Topeka,Northeast,2020-07-19
+C0661,Arkalon Taqueria #3,restaurant,Wichita,South Central,2022-04-28
+C0662,Gypsum Diner,restaurant,Hutchinson,South Central,2021-04-15
+C0663,Saline Accounting,office,Kansas City,Northeast,2019-10-30
+C0664,Arkalon Outfitters #3,retail,Lawrence,Northeast,2022-07-27
+C0665,Ninnescah Middle School,school,Wichita,South Central,2018-09-23
+C0666,Sunflower Taqueria,restaurant,Garden City,Southwest,2019-02-22
+C0667,Solomon Cafe #2,restaurant,Wichita,South Central,2022-07-13
+C0668,Smoky Hill Steakhouse #5,restaurant,Derby,South Central,2019-08-08
+C0669,Neosho Shelter #2,nonprofit,Pittsburg,Southeast,2018-08-12
+C0670,Walnut Trading Co,retail,Pittsburg,Southeast,2023-06-03
+C0671,Solomon Taqueria,restaurant,Kansas City,Northeast,2021-03-27
+C0672,Tallgrass High School,school,Dodge City,Southwest,2019-09-22
+C0673,Saline Dental,clinic,Salina,North Central,2020-04-06
+C0674,Cedar Title Co,office,Topeka,Northeast,2022-02-15
+C0675,Smoky Hill Engineering,office,Derby,South Central,2018-12-02
+C0676,Konza Kitchen #2,restaurant,Garden City,Southwest,2022-02-21
+C0677,Cedar Taqueria #2,restaurant,Hays,Northwest,2019-07-09
+C0678,Bluestem High School #3,school,Kansas City,Northeast,2019-05-09
+C0679,Flint Hills Dental,clinic,Kansas City,Northeast,2022-01-18
+C0680,Smoky Hill Emporium #2,retail,Wichita,South Central,2022-06-25
+C0681,Smoky Hill Engineering #2,office,Derby,South Central,2021-11-28
+C0682,Solomon Steakhouse #3,restaurant,Salina,North Central,2022-12-20
+C0683,Cottonwood Middle School #3,school,Derby,South Central,2020-05-07
+C0684,Tallgrass Trading Co,retail,Salina,North Central,2019-04-21
+C0685,Gypsum Academy #2,school,Wichita,South Central,2018-12-02
+C0686,Prairie Insurance #3,office,Hays,Northwest,2018-08-26
+C0687,Solomon Accounting #2,office,Wichita,South Central,2020-11-06
+C0688,Ninnescah Academy #3,school,Garden City,Southwest,2020-01-11
+C0689,Solomon Pediatrics,clinic,Pittsburg,Southeast,2019-11-21
+C0690,Flint Hills High School,school,Kansas City,Northeast,2020-04-05
+C0691,Bluestem Mercantile #2,retail,Hutchinson,South Central,2019-02-20
+C0692,Neosho Realty #3,office,Salina,North Central,2020-08-03
+C0693,Meadowlark Market #4,retail,Wichita,South Central,2021-09-16
+C0694,Redbud Outfitters #3,retail,Manhattan,Northeast,2018-10-13
+C0695,Redbud Diner #3,restaurant,Manhattan,Northeast,2021-09-26
+C0696,Solomon Law Office,office,Topeka,Northeast,2022-05-26
+C0697,Saline Cafe #3,restaurant,Kansas City,Northeast,2023-04-15
+C0698,Smoky Hill Title Co #2,office,Hutchinson,South Central,2022-09-15
+C0699,Tallgrass Hardware #3,retail,Kansas City,Northeast,2022-01-17
+C0700,Meadowlark Trading Co #4,retail,Wichita,South Central,2021-07-30
+C0701,Cottonwood Market,retail,Lawrence,Northeast,2020-10-11
+C0702,Tallgrass Engineering #2,office,Kansas City,Northeast,2023-04-25
+C0703,Cedar Pediatrics,clinic,Kansas City,Northeast,2020-05-26
+C0704,Solomon Diner,restaurant,Hays,Northwest,2021-02-06
+C0705,Sunflower Cafe #2,restaurant,Topeka,Northeast,2018-07-13
+C0706,Saline Law Office,office,Dodge City,Southwest,2024-01-04
+C0707,Heartland High School,school,Dodge City,Southwest,2022-11-30
+C0708,Solomon Urgent Care,clinic,Wichita,South Central,2020-07-24
+C0709,Smoky Hill BBQ #2,restaurant,Garden City,Southwest,2020-06-09
+C0710,Cedar Outfitters #2,retail,Topeka,Northeast,2023-01-10
+C0711,Konza Engineering #2,office,Topeka,Northeast,2022-02-18
+C0712,Bluestem Family Clinic,clinic,Dodge City,Southwest,2023-08-29
+C0713,Gypsum Market,retail,Hutchinson,South Central,2020-04-16
+C0714,Neosho Engineering #3,office,Wichita,South Central,2021-07-11
+C0715,Solomon Cafe #3,restaurant,Wichita,South Central,2019-09-03
+C0716,Neosho Mercantile #3,retail,Wichita,South Central,2018-08-11
+C0717,Chisholm Title Co,office,Hutchinson,South Central,2024-04-07
+C0718,Ninnescah Diner,restaurant,Kansas City,Northeast,2026-01-07
+C0719,Meadowlark Emporium #2,retail,Kansas City,Northeast,2022-07-18
+C0720,Smoky Hill Bistro #2,restaurant,Derby,South Central,2018-12-08
+C0721,Cottonwood BBQ #4,restaurant,Lawrence,Northeast,2019-04-05
+C0722,Tallgrass Grill #2,restaurant,Topeka,Northeast,2022-12-18
+C0723,Cottonwood Vision Care,clinic,Wichita,South Central,2023-08-17
+C0724,Chisholm Vision Care #4,clinic,Lawrence,Northeast,2020-05-26
+C0725,Ninnescah Dental #2,clinic,Lawrence,Northeast,2021-01-20
+C0726,Smoky Hill Engineering #3,office,Wichita,South Central,2018-07-23
+C0727,Tallgrass Grill #3,restaurant,Manhattan,Northeast,2020-04-30
+C0728,Prairie Outfitters #2,retail,Hutchinson,South Central,2022-06-14
+C0729,Konza Realty #4,office,Wichita,South Central,2019-08-15
+C0730,Neosho USD Office #3,school,Wichita,South Central,2024-08-10
+C0731,Arkalon Community Center,nonprofit,Lawrence,Northeast,2019-09-12
+C0732,Prairie Market #2,retail,Wichita,South Central,2019-01-19
+C0733,Arkalon Accounting,office,Kansas City,Northeast,2022-03-13
+C0734,Tallgrass Cafe #2,restaurant,Topeka,Northeast,2021-04-22
+C0735,Solomon Steakhouse #4,restaurant,Kansas City,Northeast,2019-05-22
+C0736,Flint Hills Senior Center,nonprofit,Dodge City,Southwest,2022-02-16
+C0737,Saline Kitchen #4,restaurant,Wichita,South Central,2018-11-24
+C0738,Neosho Taqueria,restaurant,Wichita,South Central,2021-03-14
+C0739,Ninnescah Diner #2,restaurant,Wichita,South Central,2019-09-06
+C0740,Smoky Hill Diner,restaurant,Topeka,Northeast,2022-05-20
+C0741,Solomon High School #4,school,Dodge City,Southwest,2021-10-06
+C0742,Prairie Youth Club #2,nonprofit,Derby,South Central,2024-06-20
+C0743,Cottonwood Accounting #2,office,Kansas City,Northeast,2021-07-19
+C0744,Bluestem Accounting #2,office,Kansas City,Northeast,2023-01-27
+C0745,Walnut Kitchen #5,restaurant,Wichita,South Central,2019-07-27
+C0746,Neosho Kitchen,restaurant,Wichita,South Central,2022-08-02
+C0747,Konza Outfitters,retail,Salina,North Central,2019-06-07
+C0748,Ninnescah High School #2,school,Kansas City,Northeast,2019-11-29
+C0749,Smoky Hill Cafe #4,restaurant,Dodge City,Southwest,2024-11-30
+C0750,Flint Hills BBQ #5,restaurant,Lawrence,Northeast,2019-04-16
+C0751,Flint Hills Wellness Center,clinic,Hutchinson,South Central,2022-08-15
+C0752,Neosho Title Co,office,Derby,South Central,2022-09-03
+C0753,Bluestem Accounting #3,office,Salina,North Central,2021-04-06
+C0754,Cottonwood Dental #2,clinic,Topeka,Northeast,2018-07-26
+C0755,Neosho Elementary,school,Manhattan,Northeast,2019-04-28
+C0756,Ninnescah Kitchen,restaurant,Dodge City,Southwest,2022-04-28
+C0757,Cedar Market #2,retail,Hays,Northwest,2021-11-23
+C0758,Cedar Family Clinic,clinic,Wichita,South Central,2020-06-29
+C0759,Smoky Hill Cafe #5,restaurant,Garden City,Southwest,2023-01-24
+C0760,Neosho Hardware,retail,Wichita,South Central,2022-03-30
+C0761,Cedar Senior Center,nonprofit,Wichita,South Central,2023-01-16
+C0762,Cottonwood Accounting #3,office,Wichita,South Central,2019-09-21
+C0763,Cedar Market #3,retail,Dodge City,Southwest,2020-03-15
+C0764,Gypsum Diner #2,restaurant,Dodge City,Southwest,2019-04-16
+C0765,Ninnescah Taqueria #2,restaurant,Kansas City,Northeast,2022-07-15
+C0766,Konza Steakhouse #3,restaurant,Wichita,South Central,2025-07-31
+C0767,Konza Kitchen #3,restaurant,Salina,North Central,2021-09-28
+C0768,Saline BBQ #2,restaurant,Topeka,Northeast,2023-01-31
+C0769,Neosho Middle School,school,Kansas City,Northeast,2020-05-22
+C0770,Flint Hills BBQ #6,restaurant,Lawrence,Northeast,2025-11-11
+C0771,Redbud Grill #2,restaurant,Garden City,Southwest,2020-11-11
+C0772,Walnut Trading Co #2,retail,Hutchinson,South Central,2024-07-09
+C0773,Gypsum Middle School #2,school,Dodge City,Southwest,2023-03-05
+C0774,Gypsum BBQ,restaurant,Pittsburg,Southeast,2018-10-20
+C0775,Redbud BBQ,restaurant,Wichita,South Central,2025-05-11
+C0776,Tallgrass Engineering #3,office,Lawrence,Northeast,2020-03-17
+C0777,Cedar Trading Co #4,retail,Derby,South Central,2020-12-28
+C0778,Redbud Accounting #2,office,Hutchinson,South Central,2022-07-12
+C0779,Chisholm Diner #2,restaurant,Dodge City,Southwest,2023-06-05
+C0780,Bluestem Elementary #3,school,Wichita,South Central,2020-12-16
+C0781,Cedar Grill #6,restaurant,Garden City,Southwest,2021-04-08
+C0782,Walnut Law Office #4,office,Garden City,Southwest,2020-09-28
+C0783,Flint Hills Senior Center #2,nonprofit,Wichita,South Central,2023-04-13
+C0784,Smoky Hill Middle School,school,Wichita,South Central,2019-03-25
+C0785,Flint Hills Taqueria #3,restaurant,Derby,South Central,2026-01-09
+C0786,Ninnescah Emporium #2,retail,Wichita,South Central,2022-11-27
+C0787,Solomon Emporium,retail,Wichita,South Central,2019-07-24
+C0788,Arkalon Wellness Center,clinic,Wichita,South Central,2020-01-12
+C0789,Chisholm Steakhouse #2,restaurant,Wichita,South Central,2024-10-18
+C0790,Cedar Urgent Care #3,clinic,Lawrence,Northeast,2020-10-29
+C0791,Solomon Realty #2,office,Lawrence,Northeast,2024-02-03
+C0792,Gypsum Elementary #2,school,Topeka,Northeast,2024-11-15
+C0793,Heartland Elementary,school,Lawrence,Northeast,2019-12-14
+C0794,Konza Wellness Center #2,clinic,Salina,North Central,2022-03-28
+C0795,Arkalon Trading Co #3,retail,Wichita,South Central,2022-08-06
+C0796,Redbud Outfitters #4,retail,Topeka,Northeast,2018-12-18
+C0797,Heartland Title Co #3,office,Wichita,South Central,2019-02-17
+C0798,Neosho Mercantile #4,retail,Lawrence,Northeast,2019-04-28
+C0799,Bluestem High School #4,school,Kansas City,Northeast,2018-09-06
+C0800,Chisholm Diner #3,restaurant,Garden City,Southwest,2019-09-20
+C0801,Cedar Bistro #3,restaurant,Wichita,South Central,2021-12-23
+C0802,Bluestem Bistro,restaurant,Hays,Northwest,2026-01-05
+C0803,Solomon Taqueria #2,restaurant,Dodge City,Southwest,2025-10-02
+C0804,Tallgrass Urgent Care,clinic,Lawrence,Northeast,2019-05-01
+C0805,Konza Realty #5,office,Wichita,South Central,2021-05-11
+C0806,Gypsum Hardware #3,retail,Wichita,South Central,2025-08-31
+C0807,Meadowlark Learning Center #2,school,Garden City,Southwest,2022-12-09
+C0808,Saline Community Center,nonprofit,Wichita,South Central,2018-09-10
+C0809,Cedar Dental #2,clinic,Kansas City,Northeast,2021-07-17
+C0810,Bluestem Outfitters,retail,Wichita,South Central,2022-01-01
+C0811,Smoky Hill Mercantile #2,retail,Dodge City,Southwest,2020-11-12
+C0812,Prairie Diner #3,restaurant,Garden City,Southwest,2022-12-25
+C0813,Flint Hills Diner #3,restaurant,Wichita,South Central,2020-08-06
+C0814,Chisholm Outfitters,retail,Salina,North Central,2019-07-13
+C0815,Meadowlark Steakhouse,restaurant,Manhattan,Northeast,2022-11-03
+C0816,Flint Hills Insurance #2,office,Garden City,Southwest,2023-03-02
+C0817,Smoky Hill Dental #2,clinic,Topeka,Northeast,2021-03-13
+C0818,Prairie Learning Center #2,school,Garden City,Southwest,2018-10-10
+C0819,Arkalon Grill #2,restaurant,Topeka,Northeast,2020-09-11
+C0820,Solomon Vision Care #2,clinic,Wichita,South Central,2019-09-25
+C0821,Konza Engineering #3,office,Derby,South Central,2020-08-17
+C0822,Chisholm Middle School #2,school,Wichita,South Central,2018-08-04
+C0823,Walnut Middle School #2,school,Wichita,South Central,2018-09-20
+C0824,Heartland Hardware,retail,Wichita,South Central,2023-03-25
+C0825,Meadowlark Kitchen #3,restaurant,Wichita,South Central,2025-03-24
+C0826,Konza Title Co #2,office,Topeka,Northeast,2024-02-26
+C0827,Prairie Urgent Care #2,clinic,Garden City,Southwest,2023-02-26
+C0828,Arkalon Cafe #2,restaurant,Dodge City,Southwest,2019-11-16
+C0829,Solomon Grill #4,restaurant,Topeka,Northeast,2021-09-08
+C0830,Walnut Mercantile #2,retail,Derby,South Central,2020-11-03
+C0831,Heartland Emporium #2,retail,Wichita,South Central,2019-06-02
+C0832,Walnut Title Co,office,Wichita,South Central,2021-04-29
+C0833,Konza Vision Care #3,clinic,Kansas City,Northeast,2019-06-22
+C0834,Heartland High School #2,school,Wichita,South Central,2026-01-10
+C0835,Cedar Diner,restaurant,Pittsburg,Southeast,2022-11-25
+C0836,Cedar Cafe #2,restaurant,Hutchinson,South Central,2023-06-21
+C0837,Cedar USD Office #4,school,Kansas City,Northeast,2019-09-19
+C0838,Cedar Emporium,retail,Lawrence,Northeast,2024-04-10
+C0839,Saline Learning Center #2,school,Wichita,South Central,2025-03-18
+C0840,Meadowlark Insurance #3,office,Kansas City,Northeast,2020-02-22
+C0841,Ninnescah Shelter,nonprofit,Derby,South Central,2022-10-13
+C0842,Neosho Pediatrics #2,clinic,Hutchinson,South Central,2020-05-05
+C0843,Tallgrass Trading Co #2,retail,Dodge City,Southwest,2020-06-23
+C0844,Heartland Law Office #2,office,Wichita,South Central,2024-06-29
+C0845,Arkalon Mercantile #4,retail,Hutchinson,South Central,2019-03-05
+C0846,Cottonwood Bistro #2,restaurant,Manhattan,Northeast,2022-03-29
+C0847,Sunflower Law Office #3,office,Garden City,Southwest,2022-01-14
+C0848,Chisholm BBQ,restaurant,Topeka,Northeast,2018-11-02
+C0849,Flint Hills Grill,restaurant,Hutchinson,South Central,2026-04-27
+C0850,Neosho Emporium #2,retail,Derby,South Central,2025-09-15
+C0851,Bluestem BBQ,restaurant,Topeka,Northeast,2021-07-27
+C0852,Redbud Realty #4,office,Kansas City,Northeast,2024-02-03
+C0853,Solomon Mercantile,retail,Dodge City,Southwest,2022-12-01
+C0854,Flint Hills Insurance #3,office,Kansas City,Northeast,2021-12-07
+C0855,Konza Pediatrics,clinic,Wichita,South Central,2018-08-22
+C0856,Bluestem Trading Co #2,retail,Salina,North Central,2018-11-30
+C0857,Meadowlark Food Bank,nonprofit,Hays,Northwest,2019-04-25
+C0858,Flint Hills Kitchen #2,restaurant,Wichita,South Central,2022-07-15
+C0859,Flint Hills Elementary,school,Kansas City,Northeast,2019-09-21
+C0860,Cottonwood Vision Care #2,clinic,Lawrence,Northeast,2020-03-26
+C0861,Saline Family Clinic,clinic,Hutchinson,South Central,2023-10-19
+C0862,Arkalon Pediatrics #2,clinic,Lawrence,Northeast,2020-04-23
+C0863,Konza Engineering #4,office,Derby,South Central,2020-12-24
+C0864,Cottonwood Elementary,school,Lawrence,Northeast,2020-01-18
+C0865,Walnut Diner #4,restaurant,Manhattan,Northeast,2021-09-27
+C0866,Gypsum Insurance #2,office,Hays,Northwest,2020-09-23
+C0867,Heartland Title Co #4,office,Kansas City,Northeast,2022-06-12
+C0868,Neosho Pediatrics #3,clinic,Derby,South Central,2023-03-21
+C0869,Prairie Accounting,office,Manhattan,Northeast,2020-11-29
+C0870,Cedar Outfitters #3,retail,Wichita,South Central,2023-05-06
+C0871,Neosho Insurance #4,office,Lawrence,Northeast,2022-02-26
+C0872,Konza Grill #2,restaurant,Kansas City,Northeast,2021-04-03
+C0873,Redbud Grill #3,restaurant,Wichita,South Central,2023-03-13
+C0874,Tallgrass Engineering #4,office,Hays,Northwest,2022-08-12
+C0875,Cottonwood Diner #2,restaurant,Kansas City,Northeast,2020-10-12
+C0876,Redbud Kitchen #4,restaurant,Kansas City,Northeast,2021-03-14
+C0877,Bluestem Hardware,retail,Wichita,South Central,2022-09-02
+C0878,Arkalon Family Clinic,clinic,Wichita,South Central,2018-10-12
+C0879,Chisholm Pediatrics,clinic,Kansas City,Northeast,2021-03-02
+C0880,Prairie Urgent Care #3,clinic,Kansas City,Northeast,2021-11-03
+C0881,Smoky Hill Academy,school,Dodge City,Southwest,2020-08-03
+C0882,Cottonwood Kitchen #3,restaurant,Kansas City,Northeast,2019-05-13
+C0883,Smoky Hill Trading Co #2,retail,Hutchinson,South Central,2019-11-24
+C0884,Cedar Grill #7,restaurant,Wichita,South Central,2018-10-12
+C0885,Flint Hills Market #3,retail,Lawrence,Northeast,2021-01-21
+C0886,Smoky Hill BBQ #3,restaurant,Kansas City,Northeast,2018-07-24
+C0887,Gypsum Law Office #4,office,Wichita,South Central,2021-02-06
+C0888,Solomon Engineering #4,office,Topeka,Northeast,2022-06-19
+C0889,Neosho Elementary #2,school,Topeka,Northeast,2019-05-06
+C0890,Ninnescah Ministries,nonprofit,Topeka,Northeast,2021-10-27
+C0891,Walnut Engineering #2,office,Kansas City,Northeast,2019-02-02
+C0892,Sunflower Grill,restaurant,Wichita,South Central,2019-05-25
+C0893,Bluestem Insurance #3,office,Kansas City,Northeast,2025-02-24
+C0894,Tallgrass Youth Club,nonprofit,Lawrence,Northeast,2021-10-13
+C0895,Heartland Bistro,restaurant,Wichita,South Central,2023-06-13
+C0896,Meadowlark Law Office,office,Derby,South Central,2020-07-23
+C0897,Cottonwood Steakhouse #2,restaurant,Dodge City,Southwest,2023-05-14
+C0898,Tallgrass Taqueria #3,restaurant,Garden City,Southwest,2018-11-12
+C0899,Solomon Grill #5,restaurant,Wichita,South Central,2019-02-17
+C0900,Cottonwood Trading Co,retail,Wichita,South Central,2020-07-10

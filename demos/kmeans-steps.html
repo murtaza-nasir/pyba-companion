@@ -1,0 +1,134 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>k-means step by step</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 200px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  canvas { width: 100%; height: auto; display: block; }
+  table.cm { border-collapse: collapse; margin: 6px 0; }
+  table.cm td, table.cm th { border: 1px solid var(--bs-border-color, #d0d7de);
+    padding: 6px 14px; text-align: center; font-variant-numeric: tabular-nums; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+
+/* Dark-mode form controls: the iframe cannot see the site theme variables,
+   so give buttons/selects explicit dark styling. */
+@media (prefers-color-scheme: dark) {
+  button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+  button:hover { background: #30363d; }
+  input[type=checkbox] { accent-color: #4493f8; }
+}
+</style>
+</head>
+<body>
+<div class="row">
+  <label>k = <b><span id="kv" class="readout">4</span></b></label>
+  <input type="range" id="k" min="2" max="6" step="1" value="4" style="width:110px">
+  <button id="step">Step</button>
+  <button id="run">Run to convergence</button>
+  <button id="restart">New random start</button>
+  <span id="status" class="readout hint"></span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">400 real customers on two standardized features: yearly orders (x) against average
+order value (y, log scale). One "Step" alternates the two k-means moves: assign every point to its
+nearest center, then move each center to the mean of its points. Watch the centers travel and the
+total distance fall until nothing changes. Different random starts can end in different solutions,
+which is why scikit-learn runs several and keeps the best.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)' };
+}
+
+const P = [[-1.312, 1.541], [-0.321, -0.678], [1.029, 0.549], [0.039, -1.0], [2.29, 0.542], [0.219, -0.078], [-1.042, 1.917], [-0.591, -0.027], [-0.952, 1.66], [2.11, 0.645], [0.309, 0.675], [0.579, 0.399], [-0.591, -1.502], [0.219, -0.311], [-0.501, -0.745], [-0.411, -1.516], [-0.141, -1.361], [-0.321, 0.9], [1.209, 0.195], [-1.402, 1.754], [0.129, -0.946], [-0.861, 1.89], [0.039, -1.219], [-1.132, 0.086], [-0.952, -0.611], [1.209, 0.686], [1.39, 0.638], [-1.312, 1.867], [1.66, 0.494], [2.2, 0.8], [1.93, 0.318], [-0.771, -0.1], [-0.411, -0.132], [1.029, 0.108], [-0.141, -1.042], [-0.501, -1.425], [2.2, 0.363], [-1.042, 0.093], [-1.042, -0.508], [0.129, 0.424], [-0.411, -1.38], [-1.042, 1.485], [2.38, 0.568], [-0.952, -0.372], [-0.681, -1.13], [-1.132, 1.807], [-0.501, -0.408], [-1.042, -0.872], [0.309, -0.679], [-0.411, 2.294], [-0.771, 2.098], [-0.501, -0.32], [0.579, 0.371], [-0.591, -1.265], [-0.591, 0.146], [-1.042, -0.6], [1.66, 0.405], [-0.501, -0.225], [1.66, 0.074], [-0.321, -0.381], [-0.411, -1.183], [-0.411, 2.804], [0.669, -0.417], [-1.132, 1.898], [-0.141, -0.42], [1.84, 0.379], [0.129, -0.661], [-0.231, -0.24], [3.461, 0.187], [-0.681, -0.249], [-0.681, -1.082], [3.1, 0.623], [-0.051, -1.467], [0.489, -1.321], [-0.411, 0.336], [-0.411, -1.314], [-0.771, -0.291], [-0.321, 2.383], [-0.501, -1.487], [2.02, 0.472], [2.74, 0.476], [-0.681, -0.958], [-1.402, -1.236], [3.01, 0.482], [1.48, 0.452], [1.75, 0.064], [-0.681, -0.148], [0.039, -1.253], [3.641, 0.463], [0.309, -0.211], [-0.411, -1.317], [-0.591, -0.834], [-0.141, -0.324], [4.361, 0.517], [0.849, -0.252], [1.48, 0.557], [0.579, 0.358], [1.209, 0.628], [0.669, 0.539], [-0.411, -1.02], [1.66, -0.282], [-0.411, 1.951], [-0.231, 0.313], [-0.771, -1.554], [1.66, 0.609], [-0.771, -1.056], [0.579, 0.515], [1.3, 0.434], [-0.861, 1.781], [-0.501, 0.272], [-0.321, 2.045], [-0.771, 2.269], [-0.411, -0.294], [-0.771, -1.414], [-0.501, 2.088], [-0.321, -0.509], [0.129, 0.075], [-0.231, 0.075], [0.129, 0.7], [-0.771, 0.168], [-0.231, -0.315], [0.039, -1.403], [-0.591, -0.932], [-0.952, 1.507], [-1.042, -1.177], [-0.861, -0.816], [-0.411, -1.151], [0.219, 0.438], [1.39, 0.591], [-0.591, -1.331], [-0.411, -1.338], [-1.042, -0.635], [-0.771, -1.415], [-0.231, -0.649], [1.3, 0.243], [1.57, 0.514], [0.939, 0.463], [-0.681, -1.196], [-0.231, -0.45], [-0.501, 1.872], [-0.411, -0.163], [0.039, 0.364], [-0.501, -0.748], [0.579, 0.745], [-0.681, 1.726], [0.039, -1.389], [0.939, 0.122], [0.759, 0.437], [-0.861, 2.256], [-0.681, -0.322], [-0.501, -0.53], [-0.771, 0.086], [-0.411, -0.743], [-0.771, -0.58], [-0.411, -1.156], [-0.411, 2.299], [-0.231, -1.362], [-0.501, -0.221], [-0.231, -0.108], [-0.681, -0.671], [-0.591, -1.497], [-0.051, -0.939], [0.129, 0.614], [-1.042, -1.128], [-1.042, -1.022], [4.451, 0.694], [-0.771, -1.303], [-0.501, 1.571], [1.84, 0.639], [0.039, -1.114], [-0.952, -1.015], [0.399, -0.469], [-0.231, 0.032], [-0.591, 0.048], [-0.051, -0.803], [1.209, 0.561], [-0.861, 1.909], [0.939, -0.441], [-0.321, -0.41], [1.209, 0.47], [-0.321, -0.423], [0.849, 0.561], [0.669, 0.616], [3.19, 0.451], [-0.591, -0.605], [-0.321, -0.093], [1.3, 0.905], [1.75, 0.576], [-0.411, 0.701], [0.399, 0.579], [-0.591, 0.05], [-1.042, -1.042], [-1.042, 1.946], [-0.411, -1.639], [-0.501, 2.188], [0.309, 0.293], [-0.231, 0.143], [0.399, -1.351], [-1.132, 2.559], [-0.771, 1.654], [0.669, 0.606], [0.039, -1.154], [-1.042, 0.02], [-1.132, -1.646], [1.209, 0.505], [-0.411, -1.46], [0.399, 0.693], [0.309, -0.52], [-0.771, 1.511], [-0.321, 0.073], [3.28, 0.359], [1.66, 0.473], [0.219, -0.496], [-0.321, -0.072], [-0.501, 2.78], [-0.681, -1.205], [1.3, 0.516], [-0.051, -1.378], [-1.042, -0.644], [-0.952, -1.179], [-0.141, 2.337], [-0.411, -1.25], [-0.681, 1.867], [0.399, -0.079], [-0.861, -0.75], [-0.231, -0.881], [-0.771, 0.139], [-0.952, 2.177], [-0.591, -0.029], [-0.681, -0.364], [-1.222, -0.652], [0.129, 0.607], [-0.591, -0.771], [0.759, 0.217], [-0.501, -0.435], [4.541, 0.606], [-1.312, -1.245], [0.399, -0.439], [-1.042, 2.253], [0.039, -0.858], [-0.411, -1.28], [-0.501, -0.845], [-0.411, -0.146], [-1.042, -1.363], [-0.952, -1.055], [1.209, 0.394], [-1.222, -0.884], [-0.231, -1.156], [-1.132, 1.522], [1.84, 0.426], [-0.771, 0.051], [0.759, 0.193], [-0.501, -1.228], [-0.411, -0.029], [0.759, 0.607], [-0.861, 1.958], [0.219, -0.781], [-0.771, -0.426], [-0.771, -1.081], [0.759, 0.575], [-0.861, -0.59], [1.57, 0.56], [-1.042, -0.592], [0.039, -0.256], [-0.771, -1.004], [-1.312, 0.976], [-0.681, -1.387], [-0.681, 0.345], [-0.141, 1.178], [-0.411, -0.89], [-0.501, -1.156], [0.669, 0.524], [-0.501, -0.409], [0.129, -1.706], [-0.681, 2.288], [-1.312, 1.207], [-1.042, -1.156], [-0.411, 0.066], [-0.681, -0.498], [0.309, -1.072], [-0.321, 2.056], [0.489, 0.748], [-0.231, -1.407], [-1.132, 1.931], [-0.411, -0.114], [3.19, 0.19], [0.759, 0.281], [-0.411, -0.127], [1.93, 0.589], [1.3, 0.689], [2.2, 0.552], [-0.321, -0.268], [-0.411, 0.65], [0.669, -0.53], [-0.141, 0.198], [0.309, 0.16], [0.039, -0.482], [2.65, 0.568], [-0.681, -0.823], [1.3, 0.803], [-1.402, -1.819], [-0.051, -0.74], [0.759, 0.538], [0.129, 0.858], [-0.501, -0.96], [1.119, 0.487], [2.11, 0.394], [-0.141, 0.403], [-0.861, -1.276], [-0.501, -0.674], [1.93, 0.2], [-0.771, -0.764], [-0.771, -1.359], [-0.231, -1.331], [0.579, -1.418], [-0.051, -0.662], [0.759, 0.873], [0.309, 0.53], [2.47, 0.476], [-0.231, -0.753], [-0.501, -0.333], [-0.861, 1.694], [0.129, -1.317], [-0.411, -1.365], [0.759, 0.408], [-0.411, 2.091], [1.93, 0.217], [1.209, 0.476], [-0.771, -0.458], [-0.771, -0.111], [4.541, 0.881], [-1.132, -1.369], [1.119, 0.368], [-0.681, -0.156], [2.2, 0.408], [1.57, 0.725], [0.039, -1.027], [-1.312, 1.96], [-0.771, -0.328], [-0.681, -0.327], [-0.861, -1.126], [-0.141, -0.012], [-1.222, 2.127], [1.119, 0.446], [2.56, 0.634], [0.849, 0.724], [0.669, 0.426], [-0.411, 2.068], [0.669, 0.499], [0.039, 0.488], [0.399, 0.784], [-0.591, 2.718], [-1.402, -1.363], [-0.591, -0.161], [-0.231, -1.274], [-0.681, -0.12], [-0.411, -0.44], [-0.231, -1.682], [0.219, -0.318], [-0.411, 1.745], [-0.591, -0.657], [0.399, 0.436], [-0.861, 2.215], [-0.952, -0.465], [-0.771, -1.002], [2.2, 0.581], [0.849, 0.262], [-0.321, -0.821], [-0.681, 1.781], [-0.501, -0.837], [0.129, -0.025], [-0.501, -0.383], [0.849, 0.725], [0.039, -1.203], [0.849, 0.406], [1.48, 0.529], [0.489, 0.642], [-0.681, -0.681], [-0.771, -0.943], [-0.231, -1.335], [0.399, 0.596], [-0.771, -1.133], [-0.952, 2.174], [0.219, -0.036], [-0.591, 2.167], [0.039, -0.098], [-0.141, -0.403], [-0.952, 1.739], [-0.231, 1.765], [2.38, 0.623], [-0.952, 1.723], [-0.321, -0.261], [-0.321, -0.756], [-0.141, 0.095], [-0.681, -1.382], [1.66, 0.616], [-0.681, 0.265], [-0.591, -1.155], [1.39, 0.445], [-0.501, -0.293]];
+const COLS = ['#0969da','#cf222e','#8250df','#bf8700','#1a7f37','#bc4c00'];
+let seed = 7;
+function rnd() { seed = (seed*1103515245+12345) % 2147483648; return seed/2147483648; }
+let centers = [], assign = [], phase = 0, iter = 0;
+function restart() {
+  const k = +document.getElementById('k').value;
+  centers = [];
+  for (let i = 0; i < k; i++) { const p = P[Math.floor(rnd()*P.length)]; centers.push([p[0], p[1]]); }
+  assign = new Array(P.length).fill(-1);
+  phase = 0; iter = 0;
+  document.getElementById('status').textContent = 'centers placed at random';
+  render();
+}
+function inertia() {
+  let s = 0;
+  P.forEach((p,i) => { const c = centers[assign[i]]; if (c) s += (p[0]-c[0])**2 + (p[1]-c[1])**2; });
+  return s;
+}
+function step() {
+  if (phase === 0) {
+    let changed = 0;
+    P.forEach((p,i) => {
+      let best = 0, bd = 1e9;
+      centers.forEach((c,j) => { const d = (p[0]-c[0])**2 + (p[1]-c[1])**2; if (d < bd) { bd = d; best = j; } });
+      if (assign[i] !== best) changed++;
+      assign[i] = best;
+    });
+    phase = 1;
+    document.getElementById('status').textContent =
+      'assigned points (' + changed + ' changed) · total squared distance ' + inertia().toFixed(0);
+    if (!changed && iter > 0) document.getElementById('status').textContent = 'converged · total squared distance ' + inertia().toFixed(0);
+  } else {
+    centers = centers.map((c,j) => {
+      const mine = P.filter((_,i) => assign[i] === j);
+      if (!mine.length) return c;
+      return [mine.reduce((a,p)=>a+p[0],0)/mine.length, mine.reduce((a,p)=>a+p[1],0)/mine.length];
+    });
+    phase = 0; iter++;
+    document.getElementById('status').textContent = 'moved centers (iteration ' + iter + ')';
+  }
+  render();
+}
+function runAll() { for (let i = 0; i < 60; i++) step(); }
+function render() {
+  const [ctx, W, H] = setupCanvas('cv', 340);
+  const col = themeColors();
+  ctx.clearRect(0,0,W,H);
+  const x = v => W/2 + v*(W/6.5);
+  const y = v => H/2 - v*(H/6.5);
+  P.forEach((p,i) => {
+    ctx.beginPath(); ctx.arc(x(p[0]), y(p[1]), 3.4, 0, 7);
+    ctx.fillStyle = assign[i] >= 0 ? COLS[assign[i]]+'88' : 'rgba(139,148,158,0.5)';
+    ctx.fill();
+  });
+  centers.forEach((c,j) => {
+    ctx.beginPath(); ctx.arc(x(c[0]), y(c[1]), 9, 0, 7);
+    ctx.fillStyle = COLS[j]; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
+  });
+  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif';
+  ctx.fillText('orders per year (standardized) →', 10, H-6);
+  ctx.save(); ctx.translate(12, H-30); ctx.rotate(-Math.PI/2);
+  ctx.fillText('avg order value (log, standardized) →', 0, 0); ctx.restore();
+}
+document.getElementById('step').addEventListener('click', step);
+document.getElementById('run').addEventListener('click', runAll);
+document.getElementById('restart').addEventListener('click', restart);
+document.getElementById('k').addEventListener('input', e => {
+  document.getElementById('kv').textContent = e.target.value; restart(); });
+window.addEventListener('resize', render);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+restart();
+</script></body></html>

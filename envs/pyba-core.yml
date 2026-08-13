@@ -1,0 +1,42 @@
+# pyba-core environment: the ONLY environment the book needs.
+# Nothing in the course requires a GPU, an API key, or an account.
+#
+# Create:    conda env create -f envs/pyba-core.yml
+# Activate:  conda activate pyba-core
+# Update:    conda env update -f envs/pyba-core.yml --prune
+# Remove:    conda env remove -n pyba-core
+
+name: pyba-core
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - pip
+
+  # Notebook runtime
+  - jupyter
+  - jupyterlab
+  - ipykernel
+  - ipywidgets
+  - nbformat
+  - nbclient
+
+  # The course stack (STYLE_GUIDE.md: keep it small)
+  - numpy
+  - pandas
+  - openpyxl          # Excel reading/writing for the Tableau handoff
+  - plotly
+  - python-kaleido    # static Plotly export for the PDF build
+  - scipy
+  - statsmodels
+  - scikit-learn
+  - streamlit          # dashboards (Ch 6); a dashboard is a plain Python script
+  # Quality of life
+  - tqdm
+
+  # pip-installed: the PyPI build of PuLP bundles the CBC solver binary
+  # (the conda build does not); same library BSAN 875 uses
+  - pip:
+      - pulp

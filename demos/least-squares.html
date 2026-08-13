@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Least squares explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 180px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+
+/* Dark-mode form controls: the iframe cannot see the site theme variables,
+   so give buttons/selects explicit dark styling. */
+@media (prefers-color-scheme: dark) {
+  button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+  button:hover { background: #30363d; }
+  input[type=checkbox] { accent-color: #4493f8; }
+}
+</style>
+</head>
+<body>
+<div class="row">
+  <span class="readout">slope <b class="blue"><span id="sl"></span></b> ·
+        intercept <b class="blue"><span id="ic"></span></b> ·
+        R² <b class="purple"><span id="r2"></span></b></span>
+  <label><input type="checkbox" id="showres" checked> Show residuals</label>
+  <button id="addout">Add an outlier</button>
+  <button id="reset">Reset</button>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">Twelve customers: orders per year against annual revenue (thousands). Drag any point
+and the least-squares line refits immediately. The vertical segments are the residuals; the line
+minimizes the sum of their squares. "Add an outlier" places a high-revenue, low-order customer;
+drag it around and read how far one point can move the slope.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', text: dark ? '#d0d4da' : '#1f2328',
+           bar: dark ? 'rgba(88,166,255,0.55)' : 'rgba(9,105,218,0.45)',
+           bar2: dark ? 'rgba(207,34,46,0.55)' : 'rgba(207,34,46,0.40)',
+           grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)' };
+}
+
+const BASE = [[5,3.1],[8,4.6],[11,5.2],[14,7.8],[17,8.1],[20,10.4],[23,10.9],[26,13.6],[29,14.2],[32,16.8],[35,16.9],[38,19.5]];
+let pts = BASE.map(p => [...p]);
+const XMAX = 60, YMAX = 40;
+let drag = -1;
+function fit() {
+  const n = pts.length;
+  let sx=0, sy=0, sxy=0, sx2=0, sy2=0;
+  for (const [x,y] of pts) { sx+=x; sy+=y; sxy+=x*y; sx2+=x*x; sy2+=y*y; }
+  const b = (n*sxy - sx*sy) / (n*sx2 - sx*sx);
+  const a = sy/n - b*sx/n;
+  let sse=0, sst=0; const ym=sy/n;
+  for (const [x,y] of pts) { sse += (y-a-b*x)**2; sst += (y-ym)**2; }
+  return [a, b, 1 - sse/sst];
+}
+function px(x, W) { return 45 + (W-60) * x / XMAX; }
+function py(y, H) { return (H-35) - (H-50) * y / YMAX; }
+function render() {
+  const [ctx, W, H] = setupCanvas('cv', 330);
+  const col = themeColors();
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = col.grid; ctx.beginPath();
+  for (let gx = 0; gx <= XMAX; gx += 10) { ctx.moveTo(px(gx,W), 10); ctx.lineTo(px(gx,W), H-35); }
+  for (let gy = 0; gy <= YMAX; gy += 10) { ctx.moveTo(45, py(gy,H)); ctx.lineTo(W-15, py(gy,H)); }
+  ctx.stroke();
+  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  for (let gx = 0; gx <= XMAX; gx += 10) ctx.fillText(gx, px(gx,W), H-18);
+  ctx.textAlign = 'right';
+  for (let gy = 0; gy <= YMAX; gy += 10) ctx.fillText('$'+gy+'k', 40, py(gy,H)+4);
+  ctx.textAlign = 'center';
+  ctx.fillText('orders per year', W/2, H-4);
+  const [a, b, r2] = fit();
+  if (document.getElementById('showres').checked) {
+    ctx.strokeStyle = '#bf8700';
+    for (const [x,y] of pts) {
+      ctx.beginPath(); ctx.moveTo(px(x,W), py(y,H)); ctx.lineTo(px(x,W), py(a+b*x,H)); ctx.stroke();
+    }
+  }
+  ctx.strokeStyle = '#0969da'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(px(0,W), py(a,H)); ctx.lineTo(px(XMAX,W), py(a+b*XMAX,H)); ctx.stroke();
+  ctx.lineWidth = 1;
+  pts.forEach(([x,y], i) => {
+    ctx.beginPath(); ctx.arc(px(x,W), py(y,H), i >= BASE.length ? 9 : 7, 0, 7);
+    ctx.fillStyle = i >= BASE.length ? '#bf8700' : 'rgba(130,80,223,0.75)';
+    ctx.fill();
+  });
+  document.getElementById('sl').textContent = '$' + (b*1000).toFixed(0) + '/order';
+  document.getElementById('ic').textContent = '$' + (a*1000).toFixed(0);
+  document.getElementById('r2').textContent = r2.toFixed(2);
+}
+const cv = document.getElementById('cv');
+function locate(e) {
+  const r = cv.getBoundingClientRect();
+  const mx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  const my = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  let best = -1, bd = 400;
+  pts.forEach(([x,y], i) => {
+    const d = (px(x,r.width)-mx)**2 + (py(y,330)-my)**2;
+    if (d < bd) { bd = d; best = i; }
+  });
+  return [best, mx, my, r];
+}
+cv.addEventListener('pointerdown', e => {
+  const [i] = locate(e);
+  if (i >= 0) { drag = i; cv.setPointerCapture(e.pointerId); }
+});
+cv.addEventListener('pointermove', e => {
+  if (drag < 0) return;
+  const r = cv.getBoundingClientRect();
+  const mx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  const my = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  const x = Math.max(0, Math.min(XMAX, (mx-45)/(r.width-60)*XMAX));
+  const y = Math.max(0, Math.min(YMAX, ((330-35)-my)/(330-50)*YMAX));
+  pts[drag] = [x, y];
+  render();
+});
+cv.addEventListener('pointerup', () => drag = -1);
+document.getElementById('addout').addEventListener('click', () => {
+  if (pts.length === BASE.length) pts.push([52, 34]);
+  render();
+});
+document.getElementById('reset').addEventListener('click', () => { pts = BASE.map(p => [...p]); render(); });
+document.getElementById('showres').addEventListener('change', render);
+window.addEventListener('resize', render);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+render();
+</script>
+</body></html>

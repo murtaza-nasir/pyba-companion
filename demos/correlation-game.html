@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Guess the correlation</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 12px 14px;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--bs-body-color, #1f2328);
+    background: var(--bs-body-bg, transparent);
+    font-size: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d4da; }
+    .hint { color: #8a919c; }
+  }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 220px; accent-color: #0969da; }
+  button {
+    font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--bs-border-color, #d0d7de);
+    background: var(--bs-tertiary-bg, #f6f8fa); color: inherit;
+  }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  label { user-select: none; }
+
+/* Dark-mode form controls: the iframe cannot see the site theme variables,
+   so give buttons/selects explicit dark styling. */
+@media (prefers-color-scheme: dark) {
+  button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+  button:hover { background: #30363d; }
+  input[type=checkbox] { accent-color: #4493f8; }
+}
+</style>
+</head>
+<body>
+<div class="row">
+  <label>Your guess: r = <b><span id="gv" class="readout">0.00</span></b></label>
+  <input type="range" id="guess" min="-100" max="100" value="0">
+  <button id="reveal">Reveal</button>
+  <button id="next">New plot</button>
+  <span id="verdict" class="readout"></span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">Each plot has a true correlation between −0.95 and +0.95. Guess it from the
+scatter alone, then reveal. Play ten rounds; most people over-guess weak patterns and
+under-guess strong ones until their eye calibrates.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    axis: dark ? '#8a919c' : '#57606a',
+    text: dark ? '#d0d4da' : '#1f2328',
+    bar:  dark ? 'rgba(88,166,255,0.55)' : 'rgba(9,105,218,0.45)',
+    barEdge: dark ? '#58a6ff' : '#0969da',
+    grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+  };
+}
+
+// mulberry32: a small, good-quality PRNG. The earlier linear-congruential
+// generator produced lattice artifacts through Box-Muller, so the scatter's
+// visual correlation did not match the computed r.
+let seed = 12345 >>> 0;
+function rnd() {
+  seed = (seed + 0x6D2B79F5) >>> 0;
+  let t = seed;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = rnd();
+  while (v === 0) v = rnd();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283185307 * v);
+}
+let pts = [], trueR = 0, revealed = false;
+function newPlot() {
+  trueR = Math.round((rnd()*1.9 - 0.95) * 100) / 100;
+  pts = [];
+  while (pts.length < 80) {
+    const x = gauss();
+    const y = trueR * x + Math.sqrt(1 - trueR*trueR) * gauss();
+    if (Math.abs(x) <= 3.2 && Math.abs(y) <= 3.2) pts.push([x, y]);   // keep on canvas
+  }
+  revealed = false;
+  document.getElementById('verdict').textContent = '';
+  draw();
+}
+function sampleR() {
+  const n = pts.length;
+  let sx=0, sy=0, sxy=0, sx2=0, sy2=0;
+  for (const [x,y] of pts) { sx+=x; sy+=y; sxy+=x*y; sx2+=x*x; sy2+=y*y; }
+  return (n*sxy - sx*sy) / Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy));
+}
+function draw() {
+  const [ctx, W, H] = setupCanvas('cv', 300);
+  const col = themeColors();
+  ctx.clearRect(0, 0, W, H);
+  const x = v => W/2 + v * (W/7);
+  const y = v => H/2 - v * (H/7);
+  ctx.strokeStyle = col.grid;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2);
+  ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
+  ctx.fillStyle = 'rgba(9,105,218,0.55)';
+  for (const [px, py] of pts) { ctx.beginPath(); ctx.arc(x(px), y(py), 3.5, 0, 7); ctx.fill(); }
+  if (revealed) {
+    const r = sampleR();
+    ctx.strokeStyle = '#cf222e'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x(-3), y(-3*r)); ctx.lineTo(x(3), y(3*r)); ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+}
+document.getElementById('guess').addEventListener('input', e =>
+  document.getElementById('gv').textContent = (e.target.value/100).toFixed(2));
+document.getElementById('reveal').addEventListener('click', () => {
+  revealed = true;
+  const g = +document.getElementById('guess').value / 100;
+  const r = sampleR();
+  const err = Math.abs(g - r);
+  const word = err < 0.1 ? 'excellent' : err < 0.25 ? 'close' : 'keep calibrating';
+  document.getElementById('verdict').innerHTML =
+    'true r = <b class="red">' + r.toFixed(2) + '</b> (you were off by ' + err.toFixed(2) + ': ' + word + ')';
+  draw();
+});
+document.getElementById('next').addEventListener('click', newPlot);
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+newPlot();
+</script>
+</body></html>

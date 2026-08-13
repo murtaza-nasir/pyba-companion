@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Bayes' rule population grid</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 170px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  select { font: inherit; padding: 2px 6px; }
+  canvas { width: 100%; height: auto; display: block; }
+  .big { font-size: 26px; font-weight: 700; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; } .green { color: #1a7f37; }
+  table.mini { border-collapse: collapse; }
+  table.mini td, table.mini th { border: none; padding: 4px 12px; text-align: right; }
+  table.mini td.hl { background: rgba(139,148,158,0.18); }
+  table.mini .tot { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="row">
+  <label>Base rate <b><span id="pv" class="readout">4%</span></b><br><input type="range" id="p" min="1" max="50" value="4"></label>
+  <label>Caught if positive (sensitivity) <b><span id="sv" class="readout">75%</span></b><br><input type="range" id="se" min="50" max="100" value="75"></label>
+  <label>False alarms if negative <b><span id="fv" class="readout">9%</span></b><br><input type="range" id="fp" min="1" max="40" value="9"></label>
+</div>
+<div class="row" style="align-items:flex-start; gap:24px;">
+  <div style="flex:1; min-width:300px;"><canvas id="cv"></canvas></div>
+  <div style="min-width:230px;">
+    <table class="mini readout" id="cmx"></table>
+    <div style="margin-top:10px;">If a case is flagged, the probability it is actually positive:</div>
+    <div class="big purple"><span id="post"></span></div>
+    <div class="hint readout" id="postcalc"></div>
+  </div>
+</div>
+<p class="hint">400 cases, one square each. Blue: positives the screening test catches. Dark red: positives it
+misses. Amber: false alarms. Gray: correctly cleared. The posterior on the right counts squares:
+blue divided by (blue + amber). Lower the base rate and watch the flagged group turn mostly amber,
+with the screening test's accuracy unchanged.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+           bar: dark ? 'rgba(88,166,255,0.55)' : 'rgba(9,105,218,0.45)' };
+}
+
+const N = 400, COLS = 25;
+let chan = null;
+try { chan = new BroadcastChannel('pyba-bayes'); } catch (err) {}
+function render() {
+  const p = +document.getElementById('p').value / 100;
+  const se = +document.getElementById('se').value / 100;
+  const fp = +document.getElementById('fp').value / 100;
+  document.getElementById('pv').textContent = Math.round(p*100)+'%';
+  document.getElementById('sv').textContent = Math.round(se*100)+'%';
+  document.getElementById('fv').textContent = Math.round(fp*100)+'%';
+  const pos = Math.round(N*p), neg = N - pos;
+  const tp = Math.round(pos*se), fn = pos - tp;
+  const fpn = Math.round(neg*fp), tn = neg - fpn;
+  const [ctx, W, H] = setupCanvas('cv', 320);
+  ctx.clearRect(0,0,W,H);
+  const cell = Math.min(W/COLS, 320/Math.ceil(N/COLS));
+  const colors = [];
+  for (let i=0;i<tp;i++) colors.push('#0969da');
+  for (let i=0;i<fn;i++) colors.push('#82071e');
+  for (let i=0;i<fpn;i++) colors.push('#bf8700');
+  for (let i=0;i<tn;i++) colors.push('rgba(139,148,158,0.35)');
+  colors.forEach((col,i) => {
+    const x = (i % COLS) * cell, y = Math.floor(i / COLS) * cell;
+    ctx.fillStyle = col;
+    ctx.fillRect(x+1, y+1, cell-2, cell-2);
+  });
+  document.getElementById('cmx').innerHTML =
+    '<tr><th></th><th>Flagged</th><th>Not flagged</th><th>Total</th></tr>' +
+    '<tr><th style="text-align:left">Actually positive</th><td class="hl"><b class="blue">' + tp +
+      '</b></td><td class="hl"><b class="red">' + fn + '</b></td><td class="tot">' + pos + '</td></tr>' +
+    '<tr><th style="text-align:left">Actually negative</th><td class="hl"><b class="amber">' + fpn +
+      '</b></td><td class="hl">' + tn + '</td><td class="tot">' + neg + '</td></tr>' +
+    '<tr><th style="text-align:left">Total</th><td class="tot">' + (tp+fpn) + '</td><td class="tot">' + (fn+tn) +
+      '</td><td class="tot">' + N + '</td></tr>';
+  if (chan) chan.postMessage({ p: p, se: se, fp: fp });
+  const post = tp + fpn > 0 ? tp/(tp+fpn) : 0;
+  document.getElementById('post').textContent = (post*100).toFixed(0)+'%';
+  document.getElementById('postcalc').textContent = tp + ' / (' + tp + ' + ' + fpn + ')';
+}
+for (const id of ['p','se','fp']) document.getElementById(id).addEventListener('input', render);
+window.addEventListener('resize', render);
+render();
+
+// report content height to the parent page so the iframe can size itself
+function pybaReportHeight() {
+  parent.postMessage({ pybaDemoHeight: document.body.scrollHeight + 28 }, "*");
+}
+new ResizeObserver(pybaReportHeight).observe(document.body);
+window.addEventListener("load", pybaReportHeight);
+</script></body></html>

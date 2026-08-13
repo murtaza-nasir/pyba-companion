@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Rolling backtest explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 200px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; } .green { color: #1a7f37; }
+</style>
+</head>
+<body>
+<div class="row">
+  <label>Holdout starts at week <b><span id="hv" class="readout"></span></b>
+    <input type="range" id="h" min="60" max="142" value="142"></label>
+  <span class="readout" id="board"></span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">The real weekly revenue series with a 13-week holdout (shaded) that you can slide
+through time. The readout re-scores three methods on each holdout: naive (last value), seasonal
+naive (52 weeks earlier), and the 8-week moving average. Slide across the year and watch the
+ranking hold or change, which is the stability question the Chapter 11 build lab asks.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)' };
+}
+
+const V = [123770, 82609, 88417, 98906, 86144, 160457, 169817, 160647, 134799, 102832, 102887, 108461, 97346, 95882, 109721, 110142, 111220, 95471, 125707, 136451, 108934, 120055, 75377, 127613, 99007, 139011, 148588, 134331, 120857, 150887, 134116, 92913, 103783, 106032, 92231, 121365, 102368, 97225, 79705, 96751, 128439, 109385, 111751, 117313, 82533, 108768, 99787, 108752, 88703, 96924, 103724, 100778, 100154, 87150, 101694, 137166, 91103, 145714, 196471, 155346, 192708, 96918, 100840, 100224, 133130, 113186, 98104, 109712, 98512, 98918, 130241, 89913, 135390, 128409, 89224, 108847, 115507, 126172, 157037, 177442, 136319, 146203, 145307, 112175, 106980, 101482, 123451, 123770, 159271, 137181, 134785, 124337, 120362, 127092, 106018, 121241, 108836, 107801, 144845, 126229, 109448, 103771, 135462, 120026, 104131, 115796, 114648, 111476, 109536, 242235, 174318, 231608, 226920, 102591, 102029, 100220, 123234, 104566, 78033, 102850, 77509, 111043, 107609, 130618, 132216, 142975, 81480, 113072, 119321, 94877, 104524, 114020, 153847, 117806, 169347, 96692, 97781, 125379, 87285, 112332, 99867, 81900, 120852, 101278, 122590, 122370, 163868, 124978, 118544, 127424, 106620, 159404, 80013, 86831, 83688];
+const HOLD = 13;
+function mae(pred, actual) {
+  let s = 0; for (let i = 0; i < actual.length; i++) s += Math.abs(actual[i] - pred[i]);
+  return s / actual.length;
+}
+function render() {
+  const h0 = +document.getElementById('h').value;
+  document.getElementById('hv').textContent = h0;
+  const test = V.slice(h0, h0 + HOLD);
+  const naive = new Array(HOLD).fill(V[h0 - 1]);
+  const snaive = V.slice(h0 - 52, h0 - 52 + HOLD);
+  const ma = new Array(HOLD).fill(V.slice(h0 - 8, h0).reduce((a, b) => a + b, 0) / 8);
+  const rows = [["naive", mae(naive, test)], ["seasonal naive", mae(snaive, test)], ["8-wk MA", mae(ma, test)]];
+  rows.sort((a, b) => a[1] - b[1]);
+  document.getElementById('board').innerHTML = rows.map((r, i) =>
+    (i ? " · " : "") + (i === 0 ? "<b class='green'>" : "<b>") + r[0] + "</b> $" + Math.round(r[1]).toLocaleString()).join("");
+  const [ctx, W, H] = setupCanvas('cv', 300);
+  const col = themeColors();
+  ctx.clearRect(0, 0, W, H);
+  const L = 55, R = 10, T = 10, B = 25;
+  const ymax = Math.max(...V) * 1.05;
+  const x = i => L + (W - L - R) * i / (V.length - 1);
+  const y = v => T + (H - T - B) * (1 - v / ymax);
+  ctx.fillStyle = 'rgba(191,135,0,0.15)';
+  ctx.fillRect(x(h0), T, x(Math.min(h0 + HOLD, V.length - 1)) - x(h0), H - T - B);
+  ctx.strokeStyle = 'rgba(139,148,158,0.9)';
+  ctx.beginPath(); V.forEach((v, i) => i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))); ctx.stroke();
+  ctx.strokeStyle = '#cf222e'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  snaive.forEach((v, i) => i ? ctx.lineTo(x(h0 + i), y(v)) : ctx.moveTo(x(h0), y(v)));
+  ctx.stroke(); ctx.lineWidth = 1;
+  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif';
+  ctx.fillText('seasonal-naive forecast in red · holdout shaded', L, H - 8);
+}
+document.getElementById('h').addEventListener('input', render);
+window.addEventListener('resize', render);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+render();
+</script></body></html>

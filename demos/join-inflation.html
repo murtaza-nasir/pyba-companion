@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Join inflation explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 170px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  select { font: inherit; padding: 2px 6px; }
+  canvas { width: 100%; height: auto; display: block; }
+  .big { font-size: 26px; font-weight: 700; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; } .green { color: #1a7f37; }
+  table.mini { border-collapse: collapse; }
+  table.mini td, table.mini th { border: 1px solid var(--bs-border-color,#d0d7de); padding: 4px 10px; text-align: right; }
+
+/* Dark-mode form controls: the iframe cannot see the site theme variables,
+   so give buttons/selects explicit dark styling. */
+@media (prefers-color-scheme: dark) {
+  button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+  button:hover { background: #30363d; }
+  input[type=checkbox] { accent-color: #4493f8; }
+}
+</style>
+</head>
+<body>
+<div class="row">
+  <button id="dup">Duplicate a product row (PW-0042)</button>
+  <button id="undo">Remove duplicates</button>
+  <label><input type="checkbox" id="validate"> use validate="many_to_one"</label>
+</div>
+<div class="row" style="align-items:flex-start; gap:26px;">
+  <div><b>orders</b> (4 lines)<table class="mini" id="t1"></table></div>
+  <div><b>products</b><table class="mini" id="t2"></table></div>
+  <div><b>merged</b><table class="mini" id="t3"></table>
+    <div class="readout" style="margin-top:6px;">rows <b><span id="rows"></span></b> ·
+      revenue <b class="purple">$<span id="rev"></span></b></div>
+    <div class="red" id="err" style="margin-top:6px; max-width:280px;"></div>
+  </div>
+</div>
+<p class="hint">The true revenue of these four order lines is $282.90. Duplicate the product row and
+merge again: the matching order lines double, and revenue inflates, with no error anywhere. Check
+the validate box to make the same mistake fail immediately instead.</p>
+<script>
+const ORDERS = [
+  ["O1","PW-0042",3,27.60],["O1","PW-0007",2,34.10],
+  ["O2","PW-0042",4,27.60],["O2","PW-0101",1,12.95]];
+let PRODUCTS = [["PW-0042","janitorial"],["PW-0007","food service"],["PW-0101","office"]];
+function esc(s){return String(s);}
+function render() {
+  const useVal = document.getElementById('validate').checked;
+  let h="<tr><th>order</th><th>sku</th><th>qty</th><th>price</th></tr>";
+  for (const r of ORDERS) h+=`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`;
+  document.getElementById('t1').innerHTML=h;
+  h="<tr><th>sku</th><th>category</th></tr>";
+  for (const r of PRODUCTS) h+=`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`;
+  document.getElementById('t2').innerHTML=h;
+  const skuCount = {};
+  PRODUCTS.forEach(p=>skuCount[p[0]]=(skuCount[p[0]]||0)+1);
+  const dupKeys = Object.keys(skuCount).filter(k=>skuCount[k]>1);
+  if (useVal && dupKeys.length) {
+    document.getElementById('t3').innerHTML="";
+    document.getElementById('rows').textContent="–";
+    document.getElementById('rev').textContent="–";
+    document.getElementById('err').textContent='MergeError: Merge keys are not unique in right dataset; not a many-to-one merge';
+    return;
+  }
+  document.getElementById('err').textContent="";
+  let rows=[], rev=0;
+  for (const o of ORDERS) for (const p of PRODUCTS) if (o[1]===p[0]) {
+    rows.push([o[0],o[1],o[2],p[1]]); rev += o[2]*o[3];
+  }
+  h="<tr><th>order</th><th>sku</th><th>qty</th><th>category</th></tr>";
+  for (const r of rows) h+=`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`;
+  document.getElementById('t3').innerHTML=h;
+  document.getElementById('rows').textContent=rows.length;
+  const el=document.getElementById('rev'); el.textContent=rev.toFixed(2);
+  el.className = Math.abs(rev-282.90)<0.01 ? 'green' : 'red';
+}
+document.getElementById('dup').addEventListener('click',()=>{PRODUCTS.push(["PW-0042","janitorial (dup)"]);render();});
+document.getElementById('undo').addEventListener('click',()=>{PRODUCTS=PRODUCTS.slice(0,3);render();});
+document.getElementById('validate').addEventListener('change',render);
+render();
+</script></body></html>

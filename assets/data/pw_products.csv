@@ -1,0 +1,121 @@
+sku,product_name,category,unit_cost,unit_price,case_cube_ft
+PW-0001,Value Floor Cleaner,janitorial,6.92,11.36,0.79
+PW-0002,Pro Trash Liners,janitorial,5.16,8.48,1.97
+PW-0003,Industrial Paper Towels,janitorial,5.81,10.1,2.63
+PW-0004,Bulk Disinfectant,janitorial,56.99,87.75,1.85
+PW-0005,Premium Mop Heads,janitorial,4.72,7.82,1.51
+PW-0006,Industrial Glass Cleaner,janitorial,5.0,7.73,0.53
+PW-0007,Premium Hand Soap,janitorial,45.1,63.84,0.47
+PW-0008,Compact Toilet Tissue,janitorial,21.15,33.84,0.91
+PW-0009,Bulk Degreaser,janitorial,5.39,8.76,0.49
+PW-0010,Eco Microfiber Cloths,janitorial,50.71,80.88,2.05
+PW-0011,Pro Floor Cleaner II,janitorial,32.43,50.32,0.78
+PW-0012,Heavy-Duty Trash Liners II,janitorial,31.8,54.27,2.93
+PW-0013,Premium Paper Towels II,janitorial,54.97,75.34,0.56
+PW-0014,Eco Disinfectant II,janitorial,7.77,12.14,2.28
+PW-0015,Eco Mop Heads II,janitorial,42.22,67.01,0.65
+PW-0016,Pro Glass Cleaner II,janitorial,16.7,23.22,0.92
+PW-0017,Bulk Hand Soap II,janitorial,10.87,15.42,1.98
+PW-0018,Eco Toilet Tissue II,janitorial,19.54,32.06,0.71
+PW-0019,Compact Degreaser II,janitorial,7.18,9.73,0.68
+PW-0020,Pro Microfiber Cloths II,janitorial,6.81,9.81,1.95
+PW-0021,Compact Floor Cleaner Plus,janitorial,32.5,54.06,0.7
+PW-0022,Everyday Trash Liners Plus,janitorial,55.1,91.45,0.46
+PW-0023,Eco Paper Towels Plus,janitorial,12.89,19.03,2.16
+PW-0024,Heavy-Duty Disinfectant Plus,janitorial,57.71,93.78,0.57
+PW-0025,Premium Mop Heads Plus,janitorial,26.68,40.81,0.67
+PW-0026,Industrial Glass Cleaner Plus,janitorial,18.64,26.87,2.8
+PW-0027,Bulk Hand Soap Plus,janitorial,57.0,95.75,1.93
+PW-0028,Premium Toilet Tissue Plus,janitorial,24.94,35.75,1.62
+PW-0029,Everyday Degreaser Plus,janitorial,5.62,8.25,1.28
+PW-0030,Eco Microfiber Cloths Plus,janitorial,52.27,70.61,0.52
+PW-0031,Standard Deli Containers,food service,8.26,12.67,1.35
+PW-0032,Compact Foam Cups,food service,22.08,34.89,1.42
+PW-0033,Pro Cutlery Packs,food service,16.56,21.37,1.1
+PW-0034,Heavy-Duty Food Wrap,food service,9.36,13.01,2.08
+PW-0035,Everyday To-Go Boxes,food service,6.95,9.06,2.26
+PW-0036,Standard Napkins,food service,8.79,14.0,0.52
+PW-0037,Value Portion Cups,food service,77.78,118.04,1.18
+PW-0038,Pro Gloves (Nitrile),food service,14.55,21.66,0.73
+PW-0039,Premium Sanitizer Wipes,food service,69.64,104.74,0.77
+PW-0040,Compact Baking Sheets,food service,27.14,37.64,1.52
+PW-0041,Everyday Deli Containers II,food service,8.16,10.8,1.01
+PW-0042,Heavy-Duty Foam Cups II,food service,13.05,20.4,1.0
+PW-0043,Bulk Cutlery Packs II,food service,8.91,12.0,1.26
+PW-0044,Value Food Wrap II,food service,8.76,12.9,2.38
+PW-0045,Value To-Go Boxes II,food service,15.22,19.22,0.77
+PW-0046,Industrial Napkins II,food service,77.92,105.33,0.32
+PW-0047,Eco Portion Cups II,food service,6.21,8.26,1.25
+PW-0048,Pro Gloves (Nitrile) II,food service,18.73,25.85,0.67
+PW-0049,Eco Sanitizer Wipes II,food service,19.13,30.18,1.57
+PW-0050,Heavy-Duty Baking Sheets II,food service,24.81,36.02,0.41
+PW-0051,Industrial Deli Containers Plus,food service,7.79,11.21,2.41
+PW-0052,Everyday Foam Cups Plus,food service,13.69,21.67,0.33
+PW-0053,Industrial Cutlery Packs Plus,food service,11.25,14.38,0.3
+PW-0054,Eco Food Wrap Plus,food service,23.46,36.39,1.73
+PW-0055,Industrial To-Go Boxes Plus,food service,43.82,67.63,0.94
+PW-0056,Standard Napkins Plus,food service,7.08,9.05,0.94
+PW-0057,Everyday Portion Cups Plus,food service,20.89,28.05,0.63
+PW-0058,Eco Gloves (Nitrile) Plus,food service,17.24,24.57,0.71
+PW-0059,Standard Sanitizer Wipes Plus,food service,11.41,17.36,1.08
+PW-0060,Standard Baking Sheets Plus,food service,33.88,44.53,2.09
+PW-0061,Bulk Deli Containers Max,food service,7.1,8.97,1.06
+PW-0062,Compact Foam Cups Max,food service,40.1,58.94,1.11
+PW-0063,Heavy-Duty Copy Paper,office,5.72,9.62,1.49
+PW-0064,Compact File Folders,office,22.03,35.85,0.59
+PW-0065,Industrial Toner Cartridge,office,2.84,4.04,1.19
+PW-0066,Value Sticky Notes,office,8.66,13.92,0.55
+PW-0067,Industrial Binder Clips,office,16.13,25.95,0.4
+PW-0068,Pro Envelopes,office,4.63,7.98,1.2
+PW-0069,Bulk Label Rolls,office,3.78,7.15,0.44
+PW-0070,Standard Whiteboard Markers,office,12.54,22.02,0.35
+PW-0071,Bulk Copy Paper II,office,29.57,44.55,0.87
+PW-0072,Eco File Folders II,office,27.27,39.77,0.54
+PW-0073,Premium Toner Cartridge II,office,14.91,21.74,0.67
+PW-0074,Bulk Sticky Notes II,office,4.95,8.22,1.48
+PW-0075,Standard Binder Clips II,office,11.63,19.36,1.43
+PW-0076,Pro Envelopes II,office,23.21,33.13,0.85
+PW-0077,Value Label Rolls II,office,2.85,4.19,1.34
+PW-0078,Standard Whiteboard Markers II,office,10.56,19.98,0.35
+PW-0079,Eco Copy Paper Plus,office,11.41,20.73,0.37
+PW-0080,Industrial File Folders Plus,office,4.08,6.04,0.64
+PW-0081,Value Toner Cartridge Plus,office,5.96,10.94,0.74
+PW-0082,Bulk Sticky Notes Plus,office,6.37,11.37,0.88
+PW-0083,Premium Binder Clips Plus,office,3.74,6.83,0.68
+PW-0084,Pro Envelopes Plus,office,6.76,10.74,0.28
+PW-0085,Heavy-Duty Label Rolls Plus,office,29.02,51.95,1.24
+PW-0086,Standard Whiteboard Markers Plus,office,5.27,7.94,0.22
+PW-0087,Heavy-Duty Safety Glasses,safety,11.17,20.54,1.17
+PW-0088,Bulk Ear Plugs,safety,19.97,33.75,1.15
+PW-0089,Industrial Hard Hats,safety,28.54,47.96,0.67
+PW-0090,Industrial First Aid Kit,safety,92.94,163.87,1.63
+PW-0091,Pro Hi-Vis Vests,safety,6.56,11.02,0.92
+PW-0092,Eco Respirator Masks,safety,58.78,88.65,0.37
+PW-0093,Bulk Work Gloves,safety,31.98,61.31,1.81
+PW-0094,Bulk Wet Floor Signs,safety,76.36,116.95,1.87
+PW-0095,Everyday Safety Glasses II,safety,18.44,28.0,0.68
+PW-0096,Heavy-Duty Ear Plugs II,safety,35.23,61.07,0.22
+PW-0097,Pro Hard Hats II,safety,14.48,22.64,0.88
+PW-0098,Everyday First Aid Kit II,safety,37.83,71.6,1.83
+PW-0099,Compact Hi-Vis Vests II,safety,5.77,10.88,0.6
+PW-0100,Everyday Respirator Masks II,safety,40.26,71.86,0.33
+PW-0101,Compact Work Gloves II,safety,9.01,16.66,0.22
+PW-0102,Premium Wet Floor Signs II,safety,6.84,12.96,0.65
+PW-0103,Value Shipping Boxes,packaging,30.37,46.82,3.55
+PW-0104,Standard Bubble Wrap,packaging,5.96,9.81,0.92
+PW-0105,Everyday Packing Tape,packaging,5.31,8.33,0.84
+PW-0106,Standard Stretch Film,packaging,4.37,6.92,1.98
+PW-0107,Compact Mailers,packaging,16.39,26.79,2.07
+PW-0108,Value Void Fill,packaging,5.26,7.56,2.91
+PW-0109,Bulk Strapping Kits,packaging,30.04,46.33,1.35
+PW-0110,Heavy-Duty Pallet Covers,packaging,5.34,7.04,3.5
+PW-0111,Compact Shipping Boxes II,packaging,3.13,4.68,2.39
+PW-0112,Premium Bubble Wrap II,packaging,6.53,8.94,3.17
+PW-0113,Industrial Packing Tape II,packaging,3.56,5.48,2.75
+PW-0114,Bulk Stretch Film II,packaging,11.05,14.68,1.12
+PW-0115,Premium Mailers II,packaging,13.05,17.96,2.49
+PW-0116,Industrial Void Fill II,packaging,21.18,29.49,2.73
+PW-0117,Compact Strapping Kits II,packaging,21.59,30.69,1.62
+PW-0118,Industrial Pallet Covers II,packaging,9.23,15.01,1.18
+PW-0119,Compact Shipping Boxes Plus,packaging,23.22,36.67,1.84
+PW-0120,Premium Bubble Wrap Plus,packaging,21.09,33.43,1.22

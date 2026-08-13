@@ -1,0 +1,7 @@
+# instructor materials never leave this machine; they are not merely
+# "private until the repo flips public"
+instructor/
+assets/data/cache/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

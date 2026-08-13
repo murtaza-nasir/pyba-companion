@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Mean vs median: drag the outlier</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 12px 14px;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--bs-body-color, #1f2328);
+    background: var(--bs-body-bg, transparent);
+    font-size: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #d0d4da; }
+    .hint { color: #8a919c; }
+  }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 220px; accent-color: #0969da; }
+  button {
+    font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--bs-border-color, #d0d7de);
+    background: var(--bs-tertiary-bg, #f6f8fa); color: inherit;
+  }
+  canvas { width: 100%; height: auto; display: block; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  label { user-select: none; }
+
+/* Dark-mode form controls: the iframe cannot see the site theme variables,
+   so give buttons/selects explicit dark styling. */
+@media (prefers-color-scheme: dark) {
+  button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+  button:hover { background: #30363d; }
+  input[type=checkbox] { accent-color: #4493f8; }
+}
+</style>
+</head>
+<body>
+<div class="row">
+  <span class="readout">mean <b class="blue">$<span id="meanv"></span></b> ·
+        median <b class="red">$<span id="medv"></span></b></span>
+  <button id="reset">Reset</button>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">Fifteen order totals from one Prairie Wholesale morning. Drag the amber point
+to the right, as far as you like. The mean follows it; the median moves very little.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    axis: dark ? '#8a919c' : '#57606a',
+    text: dark ? '#d0d4da' : '#1f2328',
+    bar:  dark ? 'rgba(88,166,255,0.55)' : 'rgba(9,105,218,0.45)',
+    barEdge: dark ? '#58a6ff' : '#0969da',
+    grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+  };
+}
+
+const BASE = [62, 74, 88, 95, 103, 118, 126, 134, 149, 161, 178, 196, 224, 262, 410];
+let data = [...BASE];
+const XMAX = 5000, PR = 7;
+let dragging = false;
+function stats() {
+  const m = data.reduce((a,b)=>a+b,0)/data.length;
+  const s = [...data].sort((a,b)=>a-b);
+  return [m, s[7]];
+}
+function xpix(v, W) { return 30 + (W-45) * Math.min(v, XMAX) / XMAX; }
+function draw() {
+  const [ctx, W, H] = setupCanvas('cv', 170);
+  const col = themeColors();
+  ctx.clearRect(0, 0, W, H);
+  const yline = 95;
+  ctx.strokeStyle = col.axis;
+  ctx.beginPath(); ctx.moveTo(30, yline); ctx.lineTo(W-15, yline); ctx.stroke();
+  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  for (let gx = 0; gx <= XMAX; gx += 1000) ctx.fillText('$'+gx, xpix(gx, W), yline+22);
+  const [m, med] = stats();
+  for (const [v, c, lbl, dy] of [[m,'#0969da','mean',-38],[med,'#cf222e','median',-58]]) {
+    ctx.strokeStyle = c; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xpix(v,W), yline+8); ctx.lineTo(xpix(v,W), yline+dy); ctx.stroke();
+    ctx.lineWidth = 1; ctx.fillStyle = c;
+    ctx.textAlign = 'left'; ctx.fillText(lbl+' $'+v.toFixed(0), xpix(v,W)+5, yline+dy+4);
+  }
+  data.forEach((v, i) => {
+    ctx.beginPath();
+    ctx.arc(xpix(v,W), yline, i===14 ? PR+2 : PR-1, 0, 7);
+    ctx.fillStyle = i===14 ? '#bf8700' : 'rgba(130,80,223,0.65)';
+    ctx.fill();
+  });
+  document.getElementById('meanv').textContent = m.toFixed(0);
+  document.getElementById('medv').textContent = med.toFixed(0);
+}
+const cv = document.getElementById('cv');
+function toVal(e) {
+  const r = cv.getBoundingClientRect();
+  const px = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  return Math.max(20, Math.min(XMAX, (px - 30) / (r.width - 45) * XMAX));
+}
+function nearOutlier(e) {
+  const r = cv.getBoundingClientRect();
+  const px = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  return Math.abs(px - (30 + (r.width-45)*Math.min(data[14],XMAX)/XMAX)) < 18;
+}
+cv.addEventListener('pointerdown', e => { if (nearOutlier(e)) { dragging = true; cv.setPointerCapture(e.pointerId); } });
+cv.addEventListener('pointermove', e => { if (dragging) { data[14] = toVal(e); draw(); } });
+cv.addEventListener('pointerup', () => dragging = false);
+document.getElementById('reset').addEventListener('click', () => { data = [...BASE]; draw(); });
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script>
+</body></html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Linear program explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  input[type=range] { width: 200px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  canvas { width: 100%; height: auto; display: block; }
+  table.cm { border-collapse: collapse; margin: 6px 0; }
+  table.cm td, table.cm th { border: 1px solid var(--bs-border-color, #d0d7de);
+    padding: 6px 14px; text-align: center; font-variant-numeric: tabular-nums; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+
+/* Dark-mode form controls: the iframe cannot see the site theme variables,
+   so give buttons/selects explicit dark styling. */
+@media (prefers-color-scheme: dark) {
+  button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+  button:hover { background: #30363d; }
+  input[type=checkbox] { accent-color: #4493f8; }
+}
+</style>
+</head>
+<body>
+<div class="row">
+  <label>Target profit: $<b><span id="pv" class="readout">2,000</span></b></label>
+  <input type="range" id="p" min="500" max="9000" step="50" value="2000">
+  <button id="solve">Solve</button>
+  <span id="status" class="readout hint"></span>
+</div>
+<canvas id="cv"></canvas>
+<p class="hint">A two-product version of the chapter's promo-stock problem. Cases of first aid kits
+(x) at $71 profit and hand soap (y) at $39, subject to 250 ft³ of promo shelf space
+(1.63x + 1.93y ≤ 250) and demand caps (x ≤ 90, y ≤ 120). The shaded area holds every plan the
+constraints allow. Raise the target profit and the purple line sweeps across the region; the last
+feasible point it touches, always a corner, is the optimum. Click Solve to check yourself.</p>
+<script>
+
+function setupCanvas(id, cssH) {
+  const c = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function themeColors() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)' };
+}
+
+const C1 = 71, C2 = 39, SPACE = 250, A1 = 1.63, A2 = 1.93, D1 = 90, D2 = 120;
+const XM = 170, YM = 150;
+function render() {
+  const target = +document.getElementById('p').value;
+  document.getElementById('pv').textContent = target.toLocaleString();
+  const [ctx, W, H] = setupCanvas('cv', 360);
+  const col = themeColors();
+  ctx.clearRect(0,0,W,H);
+  const L=50, R=15, T=12, B=40;
+  const x = v => L + (W-L-R)*v/XM;
+  const y = v => (H-B) - (H-T-B)*v/YM;
+  // feasible region polygon: intersect x<=D1, y<=D2, A1x+A2y<=SPACE, x,y>=0
+  const pts = [[0,0],[D1,0]];
+  const yAtD1 = (SPACE - A1*D1)/A2;
+  if (yAtD1 < D2) { pts.push([D1, yAtD1]); pts.push([(SPACE-A2*D2)/A1, D2]); }
+  else pts.push([D1, D2]);
+  pts.push([0, D2]);
+  ctx.beginPath();
+  pts.forEach((p,i) => i ? ctx.lineTo(x(p[0]),y(p[1])) : ctx.moveTo(x(p[0]),y(p[1])));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(9,105,218,0.14)'; ctx.fill();
+  ctx.strokeStyle = '#0969da'; ctx.stroke();
+  // constraint lines
+  ctx.strokeStyle = '#bf8700';
+  ctx.beginPath(); ctx.moveTo(x(0), y(SPACE/A2)); ctx.lineTo(x(SPACE/A1), y(0)); ctx.stroke();
+  ctx.fillStyle = '#bf8700'; ctx.font='11px sans-serif';
+  ctx.fillText('shelf space', x(SPACE/A1)-70, y(0)-8);
+  // objective line: C1 x + C2 y = target
+  ctx.strokeStyle = '#8250df'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(x(0), y(target/C2)); ctx.lineTo(x(target/C1), y(0)); ctx.stroke();
+  ctx.lineWidth = 1;
+  // axes labels
+  ctx.fillStyle = col.axis; ctx.textAlign='center';
+  for (let g=0; g<=160; g+=40) ctx.fillText(g, x(g), H-22);
+  ctx.fillText('cases of first aid kits', W/2, H-6);
+  ctx.textAlign='right';
+  for (let g=0; g<=140; g+=40) ctx.fillText(g, L-6, y(g)+4);
+  ctx.textAlign='left';
+  // feasibility of target line: any feasible point achieving target?
+  let best = 0, bx = 0, by = 0;
+  for (const [px2,py2] of pts) { const v = C1*px2 + C2*py2; if (v > best) { best = v; bx = px2; by = py2; } }
+  document.getElementById('status').textContent =
+    target <= best ? 'target achievable' : 'target NOT achievable (max is $' + Math.round(best).toLocaleString() + ')';
+}
+document.getElementById('solve').addEventListener('click', () => {
+  const pts = [[0,0],[D1,0],[D1,(SPACE-A1*D1)/A2],[(SPACE-A2*D2)/A1,D2],[0,D2]];
+  let best=0, b=null;
+  for (const p of pts) { const v = C1*p[0]+C2*p[1]; if (p[0]>=0&&p[1]>=0&&v>best) {best=v;b=p;} }
+  document.getElementById('p').value = Math.round(best);
+  document.getElementById('status').textContent =
+    'optimum: ' + Math.round(b[0]) + ' kits, ' + Math.round(b[1]) + ' soap → $' + Math.round(best).toLocaleString();
+  render();
+});
+document.getElementById('p').addEventListener('input', render);
+window.addEventListener('resize', render);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+render();
+</script></body></html>
