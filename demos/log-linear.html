@@ -18,7 +18,7 @@
 <body>
 <div class="row">
   <label><input type="checkbox" id="log"> Logarithmic axis</label>
-  <span class="hint">840 real order totals, 280 per channel</span>
+  <span class="hint">840 order totals, 280 per channel</span>
 </div>
 <canvas id="cv"></canvas>
 <p class="hint">The same three channels on both axes. On the linear axis, nearly every order
@@ -54,13 +54,13 @@ function render() {
   const col = themeColors();
   ctx.clearRect(0, 0, W, H);
   const L = 55, R = 15, T = 12, B = 30;
-  const vmax = 20000, lmin = Math.log10(3), lmax = Math.log10(20000);
+  const vmax = 11000, lmin = Math.log10(3), lmax = Math.log10(11000);
   const y = v => useLog
     ? T + (H - T - B) * (1 - (Math.log10(Math.max(v, 3)) - lmin) / (lmax - lmin))
     : T + (H - T - B) * (1 - Math.min(v, vmax) / vmax);
   const xc = k => L + (W - L - R) * (k + 0.5) / 3;
   ctx.fillStyle = col.axis; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
-  const ticks = useLog ? [10, 100, 1000, 10000] : [0, 5000, 10000, 15000, 20000];
+  const ticks = useLog ? [10, 100, 1000, 10000] : [0, 2500, 5000, 7500, 10000];
   ctx.strokeStyle = col.grid;
   for (const t of ticks) {
     ctx.fillText('$' + t.toLocaleString(), L - 6, y(t) + 4);
