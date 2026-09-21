@@ -58,7 +58,7 @@ monthly = view.set_index("order_date")["line_total"].resample("ME").sum().reset_
 st.plotly_chart(
     px.line(monthly, x="order_date", y="line_total",
             labels={"order_date": "", "line_total": "Monthly revenue ($)"}),
-    use_container_width=True)
+    width="stretch")
 
 # ---- category x region ----
 by_cat = (view.groupby(["region", "category"], as_index=False)["line_total"].sum()
@@ -66,4 +66,4 @@ by_cat = (view.groupby(["region", "category"], as_index=False)["line_total"].sum
 st.plotly_chart(
     px.bar(by_cat, x="line_total", y="category", color="region", orientation="h",
            labels={"line_total": "Revenue ($)", "category": ""}),
-    use_container_width=True)
+    width="stretch")
