@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Underfitting and overfitting</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; margin: 6px 0 0; }
+  input[type=range] { width: 170px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .panes { grid-template-columns: 1fr; } }
+  .pane-title { font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+  canvas { width: 100%; height: auto; display: block; touch-action: none; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  @media (prefers-color-scheme: dark) {
+    button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+    button:hover { background: #30363d; }
+    .blue { color: #4493f8; } .red { color: #f47067; }
+  }
+</style>
+<style id="pybaStableReadouts">#count{display:inline-block;min-width:8.8ch}</style>
+</head>
+<body>
+
+<div class="row">
+  <button id="again">Draw a new sample</button>
+  <label><input type="checkbox" id="truth"> Show the population pattern</label>
+  <span class="readout hint" id="count"></span>
+</div>
+<div class="panes3">
+  <div><div class="pane-title">Underfitting: too simple</div><canvas id="c0"></canvas><div class="readout" id="r0"></div></div>
+  <div><div class="pane-title">A good fit</div><canvas id="c1"></canvas><div class="readout" id="r1"></div></div>
+  <div><div class="pane-title">Overfitting: too flexible</div><canvas id="c2"></canvas><div class="readout" id="r2"></div></div>
+</div>
+<p class="hint">Each sample is 60 customers drawn from the same population. The black line is the boundary fitted to the current sample, and the gray lines are the boundaries from earlier samples. Accuracy on new customers is measured on 3,000 other customers from the population. With "Show the population pattern," the curve from which the samples are drawn is added as a dashed line.</p>
+<style>
+  .panes3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .panes3 { grid-template-columns: 1fr; } }
+  .panes3 { gap: 8px; }
+  .panes3 .readout { font-size: 12px; margin-top: 2px; line-height: 1.35; }
+</style>
+<script>
+
+function setupCanvas(c, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function theme() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', text: dark ? '#d0d4da' : '#1f2328',
+           grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+           blue: dark ? '#4493f8' : '#0969da', red: dark ? '#f47067' : '#cf222e',
+           purple: '#8250df', amber: '#bf8700',
+           stay: dark ? 'rgba(68,147,248,0.45)' : 'rgba(9,105,218,0.38)',
+           churn: dark ? 'rgba(244,112,103,0.70)' : 'rgba(207,34,46,0.62)' };
+}
+
+const $ = id => document.getElementById(id);
+const XMAX = 20, YMAX = 30, N = 60, KEEP = 6;
+function rng(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const curve = x => 0.25 * Math.max(x - 3, 0) ** 2;
+// The population: churn is likely below the curve, with a fuzzy edge and a few exceptions
+function sample(n, r) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const x = r() * XMAX, y = r() * YMAX;
+    let c = r() < 1 / (1 + Math.exp(-(curve(x) - y) / 1.5)) ? 1 : 0;
+    if (r() < 0.06) c = 1 - c;
+    pts.push([x, y, c]);
+  }
+  return pts;
+}
+const test = sample(3000, rng(99));
+const draw = rng(7);
+
+// Too simple: one cut on recency, placed where it makes the fewest training errors
+function fitCut(pts) {
+  const xs = pts.map(p => p[0]).sort((a, b) => a - b);
+  let best = [Infinity, 0];
+  for (let i = 0; i <= xs.length; i++) {
+    const t = i === 0 ? 0 : i === xs.length ? XMAX : (xs[i - 1] + xs[i]) / 2;
+    const err = pts.filter(p => (p[0] > t ? 1 : 0) !== p[2]).length;
+    if (err < best[0]) best = [err, t];
+  }
+  const t = best[1];
+  return { predict: (x, y) => x > t ? 1 : 0, lines: [[[t, 0], [t, YMAX]]] };
+}
+// Good fit: logistic regression on recency, recency squared, and orders (a curved boundary)
+function solve(A, b) {
+  const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let i = 0; i < n; i++) {
+    let p = i; for (let j = i + 1; j < n; j++) if (Math.abs(M[j][i]) > Math.abs(M[p][i])) p = j;
+    [M[i], M[p]] = [M[p], M[i]];
+    for (let j = i + 1; j < n; j++) { const f = M[j][i] / M[i][i]; for (let k = i; k <= n; k++) M[j][k] -= f * M[i][k]; }
+  }
+  const x = Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) { let s = M[i][n]; for (let k = i + 1; k < n; k++) s -= M[i][k] * x[k]; x[i] = s / M[i][i]; }
+  return x;
+}
+function fitCurve(pts) {
+  const feat = (x, y) => [1, x / XMAX, (x / XMAX) ** 2, y / YMAX];
+  let w = [0, 0, 0, 0];
+  for (let it = 0; it < 30; it++) {            // Newton steps, with a small penalty for stability
+    const g = [0, 0, 0, 0], Hm = [0, 1, 2, 3].map(i => [0, 1, 2, 3].map(j => i === j ? 0.05 : 0));
+    for (const [x, y, c] of pts) {
+      const f = feat(x, y), z = f.reduce((s, v, i) => s + v * w[i], 0), p = 1 / (1 + Math.exp(-z));
+      for (let i = 0; i < 4; i++) { g[i] += (p - c) * f[i]; for (let j = 0; j < 4; j++) Hm[i][j] += p * (1 - p) * f[i] * f[j]; }
+    }
+    for (let i = 0; i < 4; i++) g[i] += 0.05 * w[i];
+    const step = solve(Hm, g); w = w.map((v, i) => v - step[i]);
+  }
+  const predict = (x, y) => feat(x, y).reduce((s, v, i) => s + v * w[i], 0) > 0 ? 1 : 0;
+  const line = [];
+  for (let x = 0; x <= XMAX + 1e-9; x += 0.1) {
+    const u = x / XMAX, v = -(w[0] + w[1] * u + w[2] * u * u) / w[3];
+    line.push([x, Math.max(-1, Math.min(YMAX + 1, v * YMAX))]);
+  }
+  return { predict, lines: [line] };
+}
+// Too flexible: the nearest training customer decides (k = 1)
+const GX = 120, GY = 90;
+function fitNearest(pts) {
+  const predict = (x, y) => {
+    let best = Infinity, c = 0;
+    for (const p of pts) { const d = ((p[0] - x) / XMAX) ** 2 + ((p[1] - y) / YMAX) ** 2; if (d < best) { best = d; c = p[2]; } }
+    return c;
+  };
+  const cell = (i, j) => predict((i + 0.5) * XMAX / GX, (j + 0.5) * YMAX / GY), g = [];
+  for (let i = 0; i < GX; i++) { g.push([]); for (let j = 0; j < GY; j++) g[i].push(cell(i, j)); }
+  const lines = [], dx = XMAX / GX, dy = YMAX / GY;
+  for (let i = 0; i < GX; i++) for (let j = 0; j < GY; j++) {
+    if (i + 1 < GX && g[i][j] !== g[i + 1][j]) lines.push([[(i + 1) * dx, j * dy], [(i + 1) * dx, (j + 1) * dy]]);
+    if (j + 1 < GY && g[i][j] !== g[i][j + 1]) lines.push([[i * dx, (j + 1) * dy], [(i + 1) * dx, (j + 1) * dy]]);
+  }
+  return { predict, lines, grid: g };
+}
+const fitters = [fitCut, fitCurve, fitNearest];
+const history = [[], [], []];
+let pts = [], models = [], drawn = 0;
+const acc = (m, set) => set.filter(p => m.predict(p[0], p[1]) === p[2]).length / set.length;
+
+function newSample() {
+  pts = sample(N, draw); drawn++;
+  models = fitters.map(f => f(pts));
+  models.forEach((m, k) => {
+    m.train = acc(m, pts); m.test = acc(m, test);
+    history[k].push(m.lines); if (history[k].length > KEEP) history[k].shift();
+  });
+  render();
+}
+function render() {
+  const c = theme(), dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const stayFill = dark ? '#18273a' : '#e4eefa';       // solid colors, so neighboring cells do not leave seams
+  const churnFill = dark ? '#3a2226' : '#f8dede';
+  const ink = dark ? '#e6edf3' : '#1f2328', ghost = dark ? 'rgba(200,205,212,0.30)' : 'rgba(87,96,106,0.35)';
+  models.forEach((m, k) => {
+    const cv = $('c' + k), [ctx, W, H] = setupCanvas(cv, Math.round(cv.parentElement.clientWidth * (window.innerWidth <= 420 ? 0.6 : 1.05)));
+    const pad = { l: 26, r: 4, t: 6, b: 28 };
+    const X = x => pad.l + x / XMAX * (W - pad.l - pad.r), Y = y => H - pad.b - y / YMAX * (H - pad.t - pad.b);
+    ctx.clearRect(0, 0, W, H);
+    const cols = 80, rows = 60;               // shading of the current model's predictions
+    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+      const x0 = i * XMAX / cols, y0 = j * YMAX / rows;
+      ctx.fillStyle = m.predict(x0 + XMAX / cols / 2, y0 + YMAX / rows / 2) ? churnFill : stayFill;
+      ctx.fillRect(X(x0), Y(y0 + YMAX / rows), X(x0 + XMAX / cols) - X(x0) + 1, Y(y0) - Y(y0 + YMAX / rows) + 1);
+    }
+    ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, W - pad.l - pad.r, H - pad.t - pad.b); ctx.clip();
+    const stroke = (lines, color, width) => {
+      ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
+      for (const l of lines) { ctx.moveTo(X(l[0][0]), Y(l[0][1])); for (const p of l.slice(1)) ctx.lineTo(X(p[0]), Y(p[1])); }
+      ctx.stroke();
+    };
+    history[k].slice(0, -1).forEach(ls => stroke(ls, ghost, 1.2));
+    if ($('truth').checked) {
+      ctx.setLineDash([5, 4]); const t = [];
+      for (let x = 0; x <= XMAX; x += 0.1) t.push([x, curve(x)]);
+      stroke([t], c.amber, 2); ctx.setLineDash([]);
+    }
+    stroke(m.lines, ink, 2);
+    for (const [x, y, cl] of pts) {
+      ctx.fillStyle = cl ? c.red : c.blue; ctx.strokeStyle = dark ? '#0d1117' : '#fff'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(X(x), Y(y), 3, 0, 7); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.fillStyle = c.axis; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    for (const v of [0, 5, 10, 15, 20]) ctx.fillText(v, X(v), H - pad.b + 13);
+    ctx.fillText('Weeks since last order', (pad.l + W - pad.r) / 2, H - 3);
+    ctx.textAlign = 'right';
+    for (const v of [0, 10, 20, 30]) ctx.fillText(v, pad.l - 4, Y(v) + 4);
+    ctx.save(); ctx.translate(8, (pad.t + H - pad.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center';
+    ctx.fillText('Orders, last 12 months', 0, 0); ctx.restore();
+    $('r' + k).innerHTML = 'Training accuracy ' + Math.round(m.train * 100) + '%<br>New customers ' + Math.round(m.test * 100) + '%';
+  });
+  $('count').textContent = 'Sample ' + drawn;
+}
+$('again').addEventListener('click', newSample);
+$('truth').addEventListener('change', render);
+window.addEventListener('resize', render);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+newSample();
+</script><script>
+// report the content height to the book page so the iframe is sized to fit (assets/iframe-resize.html)
+(function () {
+  function report() {
+    var b = document.body, s = getComputedStyle(b);
+    parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+      + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+  }
+  new ResizeObserver(report).observe(document.body);
+  window.addEventListener("load", report);
+  report();
+})();
+</script>
+<script>
+// answer the book page's request for this demo's height (sent once the page's listener is ready)
+window.addEventListener("message", function (e) {
+  if (!e.data || !e.data.pybaDemoPing) return;
+  var b = document.body, s = getComputedStyle(b);
+  parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+    + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+});
+</script>
+</body></html>

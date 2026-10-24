@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Growing a decision tree</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; margin: 6px 0 0; }
+  input[type=range] { width: 170px; accent-color: #0969da; }
+  button, select { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  .pane-title { font-size: 12.5px; font-weight: 600; margin: 4px 0 2px; }
+  canvas { width: 100%; height: auto; display: block; touch-action: none; }
+  table.g { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+  table.g td, table.g th { border: 1px solid var(--bs-border-color, #d0d7de); padding: 3px 10px; text-align: right; }
+  table.g th { font-weight: 600; }
+  table.g td:first-child, table.g th:first-child { text-align: left; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  @media (prefers-color-scheme: dark) {
+    button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+    button:hover { background: #30363d; }
+    table.g td, table.g th { border-color: #3d444d; }
+    .blue { color: #4493f8; } .red { color: #f47067; }
+  }
+</style>
+<style id="pybaStableReadouts">#stepno{display:inline-block;min-width:11.8ch}</style>
+</head>
+<body>
+
+<div class="row">
+  <button id="back">&#9664; Back</button>
+  <button id="next">Next split &#9654;</button>
+  <span class="readout" id="stepno"></span>
+</div>
+<div class="card" id="say"></div>
+<div><canvas id="cv"></canvas></div>
+<div><canvas id="tv"></canvas></div>
+<style>
+  .card { margin: 2px 0 8px; padding: 6px 10px; border-radius: 8px; line-height: 1.5; min-height: 3em;
+          border: 1px solid var(--bs-border-color, #d0d7de); font-size: 13.5px; }
+</style>
+<script>
+
+function setupCanvas(c, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function theme() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', text: dark ? '#d0d4da' : '#1f2328',
+           grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+           blue: dark ? '#4493f8' : '#0969da', red: dark ? '#f47067' : '#cf222e',
+           purple: dark ? '#a371f7' : '#8250df', amber: '#bf8700',
+           shade: dark ? 'rgba(191,135,0,0.10)' : 'rgba(191,135,0,0.12)',
+           fit: dark ? 'rgba(68,147,248,0.40)' : 'rgba(9,105,218,0.30)',
+           stay: dark ? 'rgba(68,147,248,0.45)' : 'rgba(9,105,218,0.38)',
+           churn: dark ? 'rgba(244,112,103,0.70)' : 'rgba(207,34,46,0.62)' };
+}
+function jitter(i) { const s = Math.sin(i * 12.9898) * 43758.5453; return (s - Math.floor(s)) - 0.5; }
+
+const XMAX = 20, YMAX = 30;
+const PTS = [[1, 20, 0], [2, 14, 0], [3, 22, 0], [2, 8, 0], [4, 17, 0], [5, 25, 0], [6, 19, 0], [3, 4, 0], [7, 24, 0], [8, 22, 0], [5, 11, 0], [9, 27, 0], [1, 3, 0], [8, 9, 0], [10, 15, 0], [7, 2, 1], [8, 5, 1], [10, 8, 1], [12, 8, 1], [12, 17, 1], [14, 18, 1], [15, 12, 1], [13, 4, 1], [16, 22, 1], [18, 16, 1], [17, 7, 1], [9, 2, 1], [6, 8, 1], [11, 12, 0]];
+function plotFrame(ctx, W, H, pad, c, labels) {
+  const X = x => pad.l + x / XMAX * (W - pad.l - pad.r), Y = y => H - pad.b - y / YMAX * (H - pad.t - pad.b);
+  if (labels) {
+    ctx.fillStyle = c.axis; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    for (const v of [0, 5, 10, 15, 20]) ctx.fillText(v, X(v), H - pad.b + 12);
+    ctx.fillText('Weeks since last order', (pad.l + W - pad.r) / 2, H - 2);
+    ctx.textAlign = 'right'; for (const v of [0, 10, 20, 30]) ctx.fillText(v, pad.l - 4, Y(v) + 3);
+    ctx.save(); ctx.translate(9, (pad.t + H - pad.b) / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center';
+    ctx.fillText('Orders, last 12 months', 0, 0); ctx.restore();
+  }
+  return [X, Y];
+}
+function isDark() { return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+
+const NODES = [{"left": 1, "right": 6, "feature": 0, "threshold": 11.5, "n": 29, "churners": 13, "gini": 0.495}, {"left": 2, "right": 5, "feature": 1, "threshold": 8.5, "n": 21, "churners": 5, "gini": 0.363}, {"left": 3, "right": 4, "feature": 0, "threshold": 4.5, "n": 8, "churners": 5, "gini": 0.469}, {"left": -1, "right": -1, "feature": -2, "threshold": -2.0, "n": 3, "churners": 0, "gini": 0.0}, {"left": -1, "right": -1, "feature": -2, "threshold": -2.0, "n": 5, "churners": 5, "gini": 0.0}, {"left": -1, "right": -1, "feature": -2, "threshold": -2.0, "n": 13, "churners": 0, "gini": 0.0}, {"left": -1, "right": -1, "feature": -2, "threshold": -2.0, "n": 8, "churners": 8, "gini": 0.0}], ORDER = [0, 1, 2], FEAT = ['weeks since last order', 'orders'];
+const $ = id => document.getElementById(id);
+let step = 0;
+const isSplit = i => ORDER.indexOf(i) >= 0 && ORDER.indexOf(i) < step;
+const cls = nd => nd.churners * 2 > nd.n ? 1 : 0;
+function regions() {                      // the leaves of the tree grown so far, as rectangles
+  const out = [];
+  (function walk(i, x0, x1, y0, y1) {
+    const nd = NODES[i];
+    if (!isSplit(i)) { out.push({ i, x0, x1, y0, y1 }); return; }
+    if (nd.feature === 0) { walk(nd.left, x0, nd.threshold, y0, y1); walk(nd.right, nd.threshold, x1, y0, y1); }
+    else { walk(nd.left, x0, x1, y0, nd.threshold); walk(nd.right, x0, x1, nd.threshold, y1); }
+  })(0, 0, XMAX, 0, YMAX);
+  return out;
+}
+const q = nd => (nd.feature === 0 ? 'weeks' : 'orders') + ' \u2264 ' + nd.threshold;
+function draw() {
+  const c = theme(), dark = isDark(), ink = dark ? '#e6edf3' : '#1f2328';
+  const stayFill = dark ? '#18273a' : '#e4eefa', churnFill = dark ? '#3a2226' : '#f8dede';
+  // the chart: one shaded rectangle per leaf, the newest split drawn heavier
+  let [ctx, W, H] = setupCanvas($('cv'), 250);
+  const pad = { l: 34, r: 8, t: 6, b: 28 }, [X, Y] = plotFrame(ctx, W, H, pad, c, true);
+  for (const r of regions()) {
+    ctx.fillStyle = cls(NODES[r.i]) ? churnFill : stayFill;
+    ctx.fillRect(X(r.x0), Y(r.y1), X(r.x1) - X(r.x0), Y(r.y0) - Y(r.y1));
+    ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.strokeRect(X(r.x0), Y(r.y1), X(r.x1) - X(r.x0), Y(r.y0) - Y(r.y1));
+  }
+  if (step > 0) {
+    const r = (function find(i, x0, x1, y0, y1) {        // the bounds of the node split last
+      if (i === ORDER[step - 1]) return { x0, x1, y0, y1 };
+      const nd = NODES[i]; if (nd.left < 0) return null;
+      return nd.feature === 0 ? (find(nd.left, x0, nd.threshold, y0, y1) || find(nd.right, nd.threshold, x1, y0, y1))
+                              : (find(nd.left, x0, x1, y0, nd.threshold) || find(nd.right, x0, x1, nd.threshold, y1));
+    })(0, 0, XMAX, 0, YMAX), nd = NODES[ORDER[step - 1]];
+    ctx.strokeStyle = c.amber; ctx.lineWidth = 3; ctx.beginPath();
+    if (nd.feature === 0) { ctx.moveTo(X(nd.threshold), Y(r.y0)); ctx.lineTo(X(nd.threshold), Y(r.y1)); }
+    else { ctx.moveTo(X(r.x0), Y(nd.threshold)); ctx.lineTo(X(r.x1), Y(nd.threshold)); }
+    ctx.stroke();
+  }
+  for (const [x, y, k] of PTS) {
+    ctx.fillStyle = k ? c.red : c.blue; ctx.strokeStyle = dark ? '#0d1117' : '#fff'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(X(x), Y(y), 4, 0, 7); ctx.fill(); ctx.stroke();
+  }
+  // the tree diagram
+  const depthOf = {}, xs = {}; let leafCount = 0;
+  (function place(i, d) {
+    depthOf[i] = d; const nd = NODES[i];
+    if (!isSplit(i)) { xs[i] = leafCount++; return; }
+    place(nd.left, d + 1); place(nd.right, d + 1); xs[i] = (xs[nd.left] + xs[nd.right]) / 2;
+  })(0, 0);
+  const maxD = Math.max(...Object.values(depthOf)), bh = 50, gapY = 30;
+  [ctx, W, H] = setupCanvas($('tv'), 8 + (maxD + 1) * bh + maxD * gapY);   // taller as the tree grows
+  const bw = Math.min(160, W / Math.max(leafCount, 1) - 8);
+  const px = i => (xs[i] + 0.5) * W / leafCount, py = i => 4 + depthOf[i] * (bh + gapY);
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  for (const i of Object.keys(depthOf).map(Number)) {
+    const nd = NODES[i];
+    if (isSplit(i)) for (const [ch, lab] of [[nd.left, 'yes'], [nd.right, 'no']]) {
+      ctx.strokeStyle = c.axis; ctx.lineWidth = 1; ctx.beginPath();
+      ctx.moveTo(px(i), py(i) + bh); ctx.lineTo(px(ch), py(ch)); ctx.stroke();
+      ctx.fillStyle = c.axis; ctx.fillText(lab, (px(i) + px(ch)) / 2 + (ch === nd.left ? -14 : 14), (py(i) + bh + py(ch)) / 2 - 2);
+    }
+  }
+  for (const i of Object.keys(depthOf).map(Number)) {
+    const nd = NODES[i], leaf = !isSplit(i), x = px(i) - bw / 2, y = py(i);
+    ctx.fillStyle = leaf ? (cls(nd) ? churnFill : stayFill) : (dark ? '#21262d' : '#f6f8fa');
+    ctx.strokeStyle = i === ORDER[step - 1] ? c.amber : c.axis; ctx.lineWidth = i === ORDER[step - 1] ? 2.5 : 1;
+    ctx.beginPath(); ctx.roundRect(x, y, bw, bh, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = ink; ctx.font = '600 11px sans-serif';
+    ctx.fillText(leaf ? (cls(nd) ? 'predict churn' : 'predict stay') : q(nd) + '?', px(i), y + 15);
+    ctx.font = '10.5px sans-serif'; ctx.fillStyle = c.axis;
+    ctx.fillText(nd.n + ' customers', px(i), y + 30);
+    ctx.fillText(nd.churners + ' churned · Gini ' + nd.gini.toFixed(2), px(i), y + 43);
+  }
+  // the explanation of this step
+  const say = $('say');
+  if (step === 0) say.innerHTML = `All ${NODES[0].n} customers start in one group, with ${NODES[0].churners} churners. The group is mixed (Gini ${NODES[0].gini.toFixed(2)}), so the tree predicts the majority class, stay, for everyone. Press Next split to grow the tree.`;
+  else {
+    const nd = NODES[ORDER[step - 1]], L = NODES[nd.left], R = NODES[nd.right];
+    const w = (L.n * L.gini + R.n * R.gini) / nd.n;
+    say.innerHTML = `Split ${step}: the group of ${nd.n} customers (Gini ${nd.gini.toFixed(2)}) is divided by the question <b>${q(nd)}?</b> ` +
+      `The yes group has ${L.n} customers with ${L.churners} churners, and the no group ${R.n} with ${R.churners}. ` +
+      `The weighted impurity falls to ${w.toFixed(2)}, the lowest of all candidate splits for this group.` +
+      (step === ORDER.length ? ' Every leaf is now pure, so the tree stops growing.' : '');
+  }
+  $('stepno').textContent = 'Step ' + step + ' of ' + ORDER.length;
+  $('back').disabled = step === 0; $('next').disabled = step === ORDER.length;
+}
+$('next').addEventListener('click', () => { step = Math.min(ORDER.length, step + 1); draw(); });
+$('back').addEventListener('click', () => { step = Math.max(0, step - 1); draw(); });
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script><script>
+// report the content height to the book page so the iframe is sized to fit (assets/iframe-resize.html)
+(function () {
+  function report() {
+    var b = document.body, s = getComputedStyle(b);
+    parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+      + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+  }
+  new ResizeObserver(report).observe(document.body);
+  window.addEventListener("load", report);
+  report();
+})();
+</script>
+<script>
+// answer the book page's request for this demo's height (sent once the page's listener is ready)
+window.addEventListener("message", function (e) {
+  if (!e.data || !e.data.pybaDemoPing) return;
+  var b = document.body, s = getComputedStyle(b);
+  parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+    + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+});
+</script>
+</body></html>

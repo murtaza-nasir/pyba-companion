@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Logistic curve explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; margin: 6px 0 0; }
+  input[type=range] { width: 170px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .panes { grid-template-columns: 1fr; } }
+  .pane-title { font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+  canvas { width: 100%; height: auto; display: block; touch-action: none; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  @media (prefers-color-scheme: dark) {
+    button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+    button:hover { background: #30363d; }
+    .blue { color: #4493f8; } .red { color: #f47067; }
+  }
+</style>
+<style id="pybaStableReadouts">#b0v{display:inline-block;min-width:5.8ch}#b1v{display:inline-block;min-width:6.8ch}#xv{display:inline-block;min-width:4.8ch}</style>
+</head>
+<body>
+<div class="row">
+  <label>intercept <input type="range" id="b0" min="-6" max="2" step="0.01"></label>
+  <span class="readout"><b id="b0v"></b></span>
+  <label>slope per week <input type="range" id="b1" min="-0.2" max="0.6" step="0.001"></label>
+  <span class="readout"><b id="b1v"></b></span>
+  <button id="fit">Fitted values</button>
+</div>
+<div class="row">
+  <label>a customer with <b class="readout" id="xv"></b> weeks since the last order
+    <input type="range" id="x" min="0" max="48" step="0.5" value="10"></label>
+</div>
+<div class="row readout">
+  <span>score = <span id="eq"></span> = <b class="purple" id="zv"></b></span>
+  <span>probability of churn = 1 / (1 + e<sup>&minus;score</sup>) = <b class="red" id="pv"></b></span>
+</div>
+<div class="panes">
+  <div><div class="pane-title">Step 1: the linear score</div><canvas id="cz"></canvas></div>
+  <div><div class="pane-title">Step 2: the probability of churn</div><canvas id="cp"></canvas></div>
+</div>
+<div class="row readout" style="margin-top:6px">
+  <span>average probability the curve gives to each training customer's actual outcome: <b class="blue" id="acc"></b></span>
+</div>
+<p class="hint">The 610 training customers from the chapter's split, by weeks since their last order at the cutoff.
+Churners are drawn at probability 1 (red) and customers who stayed at 0 (blue), spread slightly so that
+overlapping dots stay visible. The score on the left is a straight line and can take any value. The
+logistic function on the right converts every score into a probability between 0 and 1. The number below the
+charts is a geometric average over the training customers of the probability the curve gives to what actually
+happened (churn for a churner, stay for a customer who stayed). Fitting a logistic regression means choosing the
+intercept and slope that make this number as large as possible.</p>
+<script>
+const B0 = -3.0594578034859214, B1 = 0.22053216619934599;
+const PTS = [[2.6, 0], [19.4, 1], [0.9, 0], [3.9, 0], [0.6, 0], [8.3, 0], [8.9, 1], [5.4, 1], [1.3, 0], [1.9, 0], [1.7, 0], [5.4, 0], [4.3, 0], [0.9, 0], [11.4, 1], [13.4, 1], [2.6, 1], [10.9, 1], [1.6, 0], [11.9, 0], [0.3, 1], [1.3, 0], [3.9, 0], [2.9, 0], [10.4, 1], [1.3, 0], [6.7, 1], [1.3, 0], [0.3, 0], [18.3, 1], [3.3, 0], [3.3, 1], [7.6, 0], [30.6, 1], [2.4, 0], [0.3, 0], [6.6, 0], [17.3, 0], [15.4, 0], [32.6, 0], [17.4, 1], [5.6, 1], [7.6, 0], [5.4, 1], [0.9, 0], [18.4, 0], [11.9, 0], [1.9, 0], [3.7, 0], [5.3, 0], [7.7, 0], [16.7, 1], [10.7, 1], [8.4, 1], [6.6, 0], [1.3, 0], [1.9, 0], [7.6, 1], [0.3, 0], [1.7, 0], [1.3, 0], [1.9, 0], [0.3, 0], [1.9, 0], [0.6, 0], [1.6, 0], [0.6, 0], [2.9, 0], [0.9, 0], [1.9, 0], [3.4, 0], [1.4, 0], [9.9, 0], [23.9, 1], [0.9, 0], [19.6, 1], [4.4, 0], [0.3, 0], [5.4, 0], [17.9, 1], [1.7, 0], [0.9, 0], [13.4, 0], [9.6, 0], [0.6, 0], [14.6, 1], [0.3, 0], [0.4, 0], [0.3, 0], [0.9, 0], [12.6, 1], [1.7, 0], [30.4, 0], [23.9, 0], [3.9, 0], [15.4, 1], [0.4, 0], [19.4, 1], [19.3, 1], [2.3, 0], [1.6, 0], [18.6, 1], [4.3, 0], [1.6, 0], [4.9, 0], [3.9, 0], [5.4, 0], [4.3, 0], [6.9, 0], [1.9, 0], [5.3, 0], [13.6, 0], [5.6, 0], [14.6, 0], [18.3, 0], [1.3, 0], [6.3, 0], [7.4, 0], [14.3, 0], [14.3, 1], [5.3, 0], [1.6, 0], [0.3, 0], [4.9, 0], [0.9, 0], [3.3, 0], [15.7, 1], [0.6, 0], [2.7, 1], [5.7, 0], [0.7, 0], [2.4, 1], [5.3, 0], [7.7, 0], [5.9, 0], [2.4, 0], [1.7, 0], [1.4, 0], [0.6, 0], [0.3, 0], [1.9, 0], [4.7, 0], [13.4, 1], [11.6, 0], [0.6, 0], [0.3, 0], [4.9, 0], [6.6, 1], [0.3, 0], [7.6, 0], [20.3, 0], [4.3, 0], [0.9, 0], [1.7, 0], [9.7, 0], [8.4, 0], [0.7, 0], [0.9, 0], [4.9, 0], [0.9, 0], [0.4, 0], [18.3, 1], [1.4, 0], [3.4, 0], [1.3, 0], [13.6, 1], [1.4, 0], [15.6, 0], [0.4, 0], [7.7, 0], [0.9, 0], [3.6, 1], [4.3, 1], [4.7, 0], [1.3, 0], [1.9, 0], [1.6, 0], [0.3, 0], [5.9, 0], [0.3, 0], [0.7, 0], [8.3, 1], [0.9, 0], [0.6, 0], [20.7, 0], [8.7, 0], [18.6, 0], [1.3, 0], [18.3, 1], [1.4, 0], [3.9, 0], [1.4, 0], [0.7, 0], [1.4, 0], [2.9, 0], [0.9, 0], [1.6, 0], [0.7, 0], [1.9, 0], [5.3, 0], [9.7, 0], [6.4, 1], [3.3, 0], [9.4, 1], [0.4, 0], [2.9, 0], [9.6, 0], [0.4, 0], [4.6, 0], [14.3, 0], [4.4, 0], [2.4, 0], [7.9, 0], [22.6, 1], [36.3, 0], [3.4, 1], [0.9, 0], [0.7, 0], [2.4, 0], [0.3, 0], [9.6, 1], [0.4, 0], [4.7, 0], [0.3, 0], [14.9, 0], [26.9, 1], [2.4, 0], [0.3, 0], [1.4, 0], [5.9, 0], [0.3, 0], [6.4, 0], [12.7, 1], [10.9, 1], [19.4, 1], [4.6, 0], [2.3, 0], [4.3, 1], [1.7, 0], [0.6, 0], [5.6, 0], [0.7, 0], [2.6, 0], [4.3, 1], [19.6, 1], [15.6, 1], [0.3, 0], [13.7, 0], [22.4, 1], [0.6, 0], [1.4, 0], [7.7, 0], [1.3, 0], [1.7, 0], [7.3, 0], [19.7, 1], [0.9, 0], [26.3, 1], [4.7, 0], [10.3, 1], [0.4, 0], [5.6, 0], [6.9, 1], [8.3, 0], [3.4, 0], [1.7, 0], [13.3, 1], [4.4, 0], [2.3, 0], [2.9, 0], [17.7, 0], [14.7, 0], [8.4, 0], [5.3, 1], [2.6, 0], [2.6, 0], [0.3, 0], [2.4, 0], [5.3, 0], [15.6, 1], [11.9, 0], [0.4, 0], [0.6, 0], [11.7, 1], [0.4, 0], [3.6, 0], [0.4, 0], [0.9, 0], [22.9, 1], [13.7, 1], [21.9, 1], [0.4, 0], [0.9, 0], [6.7, 0], [7.3, 1], [0.6, 0], [0.6, 0], [20.6, 1], [5.4, 0], [0.3, 0], [12.4, 0], [14.9, 1], [2.3, 0], [4.7, 0], [25.7, 1], [0.7, 0], [14.3, 0], [0.4, 0], [3.7, 0], [1.3, 0], [1.9, 0], [5.3, 0], [0.6, 0], [1.3, 0], [0.4, 0], [5.4, 0], [7.6, 0], [1.7, 0], [0.4, 0], [8.9, 1], [10.6, 1], [0.3, 0], [3.4, 0], [0.9, 0], [19.7, 1], [18.7, 0], [0.4, 0], [1.3, 0], [3.6, 0], [3.4, 0], [2.9, 0], [7.4, 0], [17.3, 1], [5.9, 0], [10.7, 0], [2.6, 0], [0.3, 0], [0.4, 0], [9.9, 0], [19.9, 1], [0.3, 0], [2.4, 0], [8.7, 0], [0.7, 0], [16.4, 1], [4.6, 0], [13.7, 1], [4.7, 0], [13.3, 1], [20.3, 1], [15.4, 1], [1.3, 0], [8.6, 1], [0.3, 0], [4.3, 1], [17.9, 1], [0.3, 0], [1.3, 0], [5.6, 0], [8.7, 0], [3.7, 0], [0.7, 0], [1.6, 0], [0.3, 0], [1.3, 0], [1.6, 0], [0.6, 0], [1.6, 0], [1.3, 0], [1.3, 0], [16.7, 1], [2.9, 0], [1.9, 0], [12.7, 0], [0.9, 0], [3.3, 0], [0.4, 0], [0.7, 0], [19.3, 1], [13.6, 1], [5.4, 1], [0.6, 0], [0.6, 0], [12.3, 1], [3.7, 0], [0.7, 0], [21.9, 1], [19.3, 0], [5.4, 0], [9.9, 0], [1.4, 0], [0.3, 0], [15.4, 1], [23.3, 1], [9.3, 1], [0.6, 0], [15.6, 1], [15.6, 1], [0.4, 0], [2.3, 0], [6.4, 0], [6.3, 0], [0.7, 0], [3.9, 1], [8.9, 0], [29.4, 1], [0.3, 0], [11.3, 0], [5.9, 1], [2.6, 0], [3.4, 0], [2.4, 0], [0.3, 0], [1.6, 0], [5.3, 0], [0.9, 0], [1.9, 0], [2.4, 0], [1.6, 0], [1.3, 0], [20.4, 1], [8.3, 1], [0.4, 0], [2.3, 0], [2.6, 0], [0.4, 0], [6.6, 0], [17.6, 1], [2.4, 0], [1.7, 0], [4.7, 0], [0.9, 0], [15.6, 0], [0.6, 0], [20.7, 0], [47.6, 1], [3.7, 0], [8.6, 0], [7.6, 0], [2.3, 0], [3.4, 0], [4.6, 0], [10.7, 1], [2.3, 0], [17.3, 1], [0.6, 0], [19.3, 1], [0.3, 0], [4.9, 0], [19.4, 0], [0.6, 0], [1.4, 0], [11.9, 0], [0.4, 0], [6.3, 0], [0.4, 0], [12.6, 0], [1.4, 0], [0.3, 0], [1.3, 0], [11.4, 1], [23.7, 1], [0.9, 0], [4.7, 0], [1.6, 0], [7.3, 1], [10.7, 0], [4.3, 0], [1.9, 0], [13.3, 1], [14.3, 0], [4.6, 0], [7.7, 0], [0.3, 0], [4.3, 0], [21.9, 1], [0.6, 0], [3.7, 0], [1.9, 0], [21.6, 1], [4.4, 0], [6.6, 0], [8.6, 0], [10.9, 1], [4.3, 0], [6.9, 0], [1.7, 0], [2.4, 0], [2.9, 0], [0.7, 0], [5.4, 0], [0.7, 0], [2.9, 0], [18.3, 1], [4.9, 0], [1.4, 0], [0.3, 0], [2.3, 0], [11.9, 0], [16.4, 1], [0.4, 0], [19.4, 1], [3.3, 0], [4.7, 0], [5.7, 0], [0.4, 0], [0.7, 0], [0.9, 0], [5.9, 1], [6.6, 0], [0.9, 0], [1.4, 0], [2.4, 1], [6.6, 0], [0.6, 0], [1.9, 0], [3.3, 0], [0.7, 0], [14.7, 0], [2.3, 0], [11.9, 1], [9.7, 0], [1.4, 0], [5.7, 1], [2.6, 0], [0.4, 0], [6.6, 0], [2.7, 0], [20.6, 1], [5.4, 0], [11.7, 1], [8.9, 1], [0.3, 0], [4.7, 0], [0.3, 0], [1.9, 0], [6.6, 0], [0.3, 0], [8.7, 0], [20.3, 1], [17.4, 1], [4.7, 0], [6.6, 0], [7.4, 0], [3.7, 0], [0.7, 0], [36.7, 1], [0.3, 0], [0.3, 0], [0.4, 0], [3.9, 0], [0.3, 0], [4.6, 0], [14.9, 0], [1.3, 0], [3.9, 0], [0.3, 0], [3.6, 1], [0.3, 0], [19.4, 1], [20.6, 0], [7.7, 0], [8.3, 0], [3.7, 0], [14.4, 0], [2.4, 0], [2.4, 0], [6.7, 0], [0.4, 0], [10.3, 0], [9.4, 0], [1.3, 0], [2.4, 0], [5.3, 1], [9.6, 1], [13.4, 0], [2.6, 0], [8.3, 1], [9.7, 1], [4.6, 0], [0.7, 0], [2.6, 0], [0.6, 0], [10.7, 0], [6.3, 0], [5.3, 0], [0.9, 0], [2.7, 0], [2.7, 0], [1.7, 0], [0.3, 0], [16.9, 1], [0.9, 0], [17.6, 0], [19.6, 1], [2.4, 0], [1.3, 0], [6.3, 1], [2.9, 0], [14.9, 0], [5.7, 0], [1.9, 0], [3.4, 0], [0.9, 0], [1.3, 0], [12.3, 0], [0.3, 0], [15.6, 1], [0.3, 0], [3.7, 0]];
+
+function setupCanvas(c, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function theme() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', text: dark ? '#d0d4da' : '#1f2328',
+           grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+           blue: dark ? '#4493f8' : '#0969da', red: dark ? '#f47067' : '#cf222e',
+           purple: '#8250df', amber: '#bf8700',
+           stay: dark ? 'rgba(68,147,248,0.45)' : 'rgba(9,105,218,0.38)',
+           churn: dark ? 'rgba(244,112,103,0.70)' : 'rgba(207,34,46,0.62)' };
+}
+
+const $ = id => document.getElementById(id);
+$('b0').value = -1.0; $('b1').value = 0.02;
+const XMAX = 48, ZMIN = -8, ZMAX = 8;
+function jitter(i) { const s = Math.sin(i * 12.9898) * 43758.5453; return (s - Math.floor(s)) - 0.5; }
+function frame(ctx, W, H, pad, ymin, ymax, ticks, fmt, c) {
+  const X = x => pad.l + x / XMAX * (W - pad.l - pad.r);
+  const Y = v => H - pad.b - (v - ymin) / (ymax - ymin) * (H - pad.t - pad.b);
+  ctx.font = '11px sans-serif'; ctx.lineWidth = 1;
+  for (const t of ticks) { ctx.strokeStyle = c.grid; ctx.beginPath(); ctx.moveTo(pad.l, Y(t)); ctx.lineTo(W - pad.r, Y(t)); ctx.stroke();
+    ctx.fillStyle = c.axis; ctx.textAlign = 'right'; ctx.fillText(fmt(t), pad.l - 5, Y(t) + 4); }
+  ctx.textAlign = 'center';
+  for (let x = 0; x <= XMAX; x += 8) ctx.fillText(x, X(x), H - pad.b + 14);
+  ctx.fillText('weeks since last order', (pad.l + W - pad.r) / 2, H - 3);
+  return [X, Y];
+}
+function draw() {
+  const b0 = +$('b0').value, b1 = +$('b1').value, xc = +$('x').value, c = theme();
+  const sig = z => 1 / (1 + Math.exp(-z));
+  $('b0v').textContent = b0.toFixed(2); $('b1v').textContent = b1.toFixed(3); $('xv').textContent = xc.toFixed(1);
+  const z = b0 + b1 * xc;
+  $('eq').textContent = `${b0.toFixed(2)} + ${b1.toFixed(3)} × ${xc.toFixed(1)}`;
+  $('zv').textContent = z.toFixed(2); $('pv').textContent = sig(z).toFixed(3);
+  let ll = 0; for (const [x, yy] of PTS) { const p = sig(b0 + b1 * x); ll += Math.log(yy ? p : 1 - p); }
+  $('acc').textContent = Math.exp(ll / PTS.length).toFixed(3);
+  const pad = {l: 40, r: 10, t: 10, b: 30};
+  // left: score
+  const CH = window.innerWidth <= 420 ? 180 : 230;   // shorter when the two charts are stacked
+  let [ctx, W, H] = setupCanvas($('cz'), CH);
+  let [X, Y] = frame(ctx, W, H, pad, ZMIN, ZMAX, [-8, -4, 0, 4, 8], t => t, c);
+  ctx.strokeStyle = c.axis; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(pad.l, Y(0)); ctx.lineTo(W - pad.r, Y(0)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, W - pad.l - pad.r, H - pad.t - pad.b); ctx.clip();
+  ctx.strokeStyle = c.purple; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(X(0), Y(b0)); ctx.lineTo(X(XMAX), Y(b0 + b1 * XMAX)); ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = c.amber; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(xc), pad.t); ctx.lineTo(X(xc), H - pad.b); ctx.stroke();
+  if (z >= ZMIN && z <= ZMAX) { ctx.fillStyle = c.purple; ctx.beginPath(); ctx.arc(X(xc), Y(z), 5, 0, 7); ctx.fill(); }
+  ctx.fillStyle = c.axis; ctx.textAlign = 'right'; ctx.fillText('score 0 = probability 0.5', W - pad.r - 4, Y(0) + 14);
+  // right: probability
+  [ctx, W, H] = setupCanvas($('cp'), CH);
+  [X, Y] = frame(ctx, W, H, pad, -0.08, 1.08, [0, 0.25, 0.5, 0.75, 1], t => t.toFixed(2), c);
+  PTS.forEach(([x, yy], i) => { ctx.fillStyle = yy ? c.churn : c.stay; ctx.beginPath();
+    ctx.arc(X(x), Y(yy + jitter(i) * 0.09), 2.4, 0, 7); ctx.fill(); });
+  ctx.strokeStyle = c.axis; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(pad.l, Y(0.5)); ctx.lineTo(W - pad.r, Y(0.5)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = c.red; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let i = 0; i <= 200; i++) { const x = i / 200 * XMAX; const yy = Y(sig(b0 + b1 * x)); i ? ctx.lineTo(X(x), yy) : ctx.moveTo(X(x), yy); }
+  ctx.stroke();
+  ctx.strokeStyle = c.amber; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(xc), pad.t); ctx.lineTo(X(xc), H - pad.b); ctx.stroke();
+  ctx.fillStyle = c.red; ctx.beginPath(); ctx.arc(X(xc), Y(sig(z)), 5, 0, 7); ctx.fill();
+}
+for (const id of ['b0', 'b1', 'x']) $(id).addEventListener('input', draw);
+$('fit').addEventListener('click', () => { $('b0').value = B0; $('b1').value = B1; draw(); });
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script><script>
+// report the content height to the book page so the iframe is sized to fit (assets/iframe-resize.html)
+(function () {
+  function report() {
+    var b = document.body, s = getComputedStyle(b);
+    parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+      + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+  }
+  new ResizeObserver(report).observe(document.body);
+  window.addEventListener("load", report);
+  report();
+})();
+</script>
+<script>
+// answer the book page's request for this demo's height (sent once the page's listener is ready)
+window.addEventListener("message", function (e) {
+  if (!e.data || !e.data.pybaDemoPing) return;
+  var b = document.body, s = getComputedStyle(b);
+  parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+    + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+});
+</script>
+</body></html>

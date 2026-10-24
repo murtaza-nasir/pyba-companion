@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>K-nearest neighbors explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; margin: 6px 0 0; }
+  input[type=range] { width: 170px; accent-color: #0969da; }
+  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 420px) { .panes { grid-template-columns: 1fr; } }
+  .pane-title { font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+  canvas { width: 100%; height: auto; display: block; touch-action: none; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  @media (prefers-color-scheme: dark) {
+    button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+    button:hover { background: #30363d; }
+    .blue { color: #4493f8; } .red { color: #f47067; }
+  }
+</style>
+<style id="pybaStableReadouts">#kv{display:inline-block;min-width:2.8ch}#qv{display:inline-block;min-width:18.8ch}</style>
+</head>
+<body>
+<div class="row">
+  <label>k <input type="range" id="k" min="1" max="51" step="2" value="15"></label>
+  <span class="readout"><b id="kv"></b> neighbors</span>
+  <label><input type="checkbox" id="scaled" checked> Scale the two features</label>
+  <span class="readout">new customer: <b id="qv"></b></span>
+</div>
+<div class="row readout">
+  <span>neighbors who churned: <b class="red" id="nc"></b> &middot; stayed: <b class="blue" id="ns"></b></span>
+  <span>prediction: <b id="pred"></b></span>
+</div>
+<div><canvas id="cv"></canvas></div>
+<p class="hint">The 610 training customers from the chapter's split, on two of the twenty features: weeks since
+the last order and twelve-month revenue (the axis stops at $40,000, so the few larger customers are not drawn,
+although they still count as neighbors). Red dots churned and blue dots stayed. Click or tap to move the new
+customer (amber). With scaling, each feature is converted to standard deviations from its mean before distances
+are measured, so a difference of one standard deviation counts the same on both axes.</p>
+<script>
+const PTS = [[2.6, 1205, 0], [19.4, 2006, 1], [0.9, 15948, 0], [3.9, 647, 0], [0.6, 15287, 0], [8.3, 8682, 0], [8.9, 938, 1], [5.4, 5973, 1], [1.3, 2071, 0], [1.9, 3638, 0], [1.7, 9569, 0], [5.4, 1790, 0], [4.3, 1314, 0], [0.9, 2593, 0], [11.4, 4599, 1], [13.4, 2343, 1], [2.6, 1440, 1], [10.9, 415, 1], [1.6, 16403, 0], [11.9, 2034, 0], [0.3, 10284, 1], [1.3, 15425, 0], [3.9, 704, 0], [2.9, 6598, 0], [10.4, 1965, 1], [1.3, 508, 0], [6.7, 569, 1], [1.3, 25628, 0], [0.3, 20254, 0], [18.3, 2110, 1], [3.3, 2290, 0], [3.3, 1660, 1], [7.6, 1390, 0], [30.6, 1140, 1], [2.4, 1348, 0], [0.3, 25574, 0], [6.6, 5272, 0], [17.3, 4785, 0], [15.4, 1182, 0], [32.6, 4007, 0], [17.4, 1976, 1], [5.6, 13287, 1], [7.6, 8201, 0], [5.4, 708, 1], [0.9, 16233, 0], [18.4, 35374, 0], [11.9, 1978, 0], [1.9, 982, 0], [3.7, 24417, 0], [5.3, 12605, 0], [7.7, 5024, 0], [16.7, 3406, 1], [10.7, 1628, 1], [8.4, 2442, 1], [6.6, 1405, 0], [1.3, 5178, 0], [1.9, 19606, 0], [7.6, 1782, 1], [0.3, 205, 0], [1.7, 9208, 0], [1.3, 2806, 0], [1.9, 1310, 0], [0.3, 2068, 0], [1.9, 797, 0], [0.6, 3448, 0], [1.6, 3896, 0], [0.6, 15297, 0], [2.9, 4027, 0], [0.9, 29588, 0], [1.9, 817, 0], [3.4, 1717, 0], [1.4, 16167, 0], [9.9, 24802, 0], [23.9, 632, 1], [0.9, 2043, 0], [19.6, 6804, 1], [4.4, 2129, 0], [0.3, 16454, 0], [5.4, 22394, 0], [17.9, 2744, 1], [1.7, 41490, 0], [0.9, 2512, 0], [13.4, 3209, 0], [9.6, 18819, 0], [0.6, 1913, 0], [14.6, 2183, 1], [0.3, 7746, 0], [0.4, 1110, 0], [0.3, 692, 0], [0.9, 13709, 0], [12.6, 1764, 1], [1.7, 3907, 0], [30.4, 19111, 0], [23.9, 1085, 0], [3.9, 5906, 0], [15.4, 2362, 1], [0.4, 9991, 0], [19.4, 43, 1], [19.3, 848, 1], [2.3, 16925, 0], [1.6, 3422, 0], [18.6, 540, 1], [4.3, 24628, 0], [1.6, 12440, 0], [4.9, 648, 0], [3.9, 460, 0], [5.4, 1784, 0], [4.3, 4085, 0], [6.9, 13998, 0], [1.9, 5177, 0], [5.3, 564, 0], [13.6, 8644, 0], [5.6, 2191, 0], [14.6, 1192, 0], [18.3, 2864, 0], [1.3, 5070, 0], [6.3, 1263, 0], [7.4, 1424, 0], [14.3, 864, 0], [14.3, 1280, 1], [5.3, 842, 0], [1.6, 2630, 0], [0.3, 12856, 0], [4.9, 18310, 0], [0.9, 6472, 0], [3.3, 4571, 0], [15.7, 5218, 1], [0.6, 9429, 0], [2.7, 2136, 1], [5.7, 1550, 0], [0.7, 3409, 0], [2.4, 989, 1], [5.3, 624, 0], [7.7, 3273, 0], [5.9, 646, 0], [2.4, 766, 0], [1.7, 4033, 0], [1.4, 19974, 0], [0.6, 6306, 0], [0.3, 8272, 0], [1.9, 3007, 0], [4.7, 15263, 0], [13.4, 660, 1], [11.6, 1106, 0], [0.6, 7435, 0], [0.3, 12626, 0], [4.9, 26265, 0], [6.6, 2718, 1], [0.3, 8393, 0], [7.6, 358, 0], [20.3, 1283, 0], [4.3, 8964, 0], [0.9, 15840, 0], [1.7, 20045, 0], [9.7, 2812, 0], [8.4, 20750, 0], [0.7, 21752, 0], [0.9, 1742, 0], [4.9, 1173, 0], [0.9, 9076, 0], [0.4, 1915, 0], [18.3, 3054, 1], [1.4, 21727, 0], [3.4, 853, 0], [1.3, 1176, 0], [13.6, 1036, 1], [1.4, 273, 0], [15.6, 8414, 0], [0.4, 11004, 0], [7.7, 4122, 0], [0.9, 10855, 0], [3.6, 4628, 1], [4.3, 18990, 1], [4.7, 1854, 0], [1.3, 1804, 0], [1.9, 983, 0], [1.6, 2672, 0], [0.3, 9606, 0], [5.9, 478, 0], [0.3, 23189, 0], [0.7, 1217, 0], [8.3, 3170, 1], [0.9, 16541, 0], [0.6, 12720, 0], [20.7, 163, 0], [8.7, 623, 0], [18.6, 1067, 0], [1.3, 29404, 0], [18.3, 1426, 1], [1.4, 28979, 0], [3.9, 15241, 0], [1.4, 1864, 0], [0.7, 9426, 0], [1.4, 11593, 0], [2.9, 1347, 0], [0.9, 1661, 0], [1.6, 271, 0], [0.7, 7803, 0], [1.9, 3369, 0], [5.3, 10319, 0], [9.7, 7788, 0], [6.4, 2492, 1], [3.3, 2107, 0], [9.4, 3876, 1], [0.4, 11249, 0], [2.9, 1205, 0], [9.6, 1660, 0], [0.4, 15338, 0], [4.6, 5515, 0], [14.3, 2166, 0], [4.4, 11187, 0], [2.4, 10711, 0], [7.9, 1403, 0], [22.6, 565, 1], [36.3, 32, 0], [3.4, 1161, 1], [0.9, 4559, 0], [0.7, 2514, 0], [2.4, 24812, 0], [0.3, 9515, 0], [9.6, 2325, 1], [0.4, 2012, 0], [4.7, 10185, 0], [0.3, 3139, 0], [14.9, 1754, 0], [26.9, 324, 1], [2.4, 673, 0], [0.3, 3257, 0], [1.4, 16119, 0], [5.9, 1210, 0], [0.3, 25899, 0], [6.4, 883, 0], [12.7, 19453, 1], [10.9, 599, 1], [19.4, 545, 1], [4.6, 12036, 0], [2.3, 408, 0], [4.3, 1178, 1], [1.7, 20162, 0], [0.6, 4229, 0], [5.6, 1701, 0], [0.7, 11031, 0], [2.6, 13958, 0], [4.3, 15453, 1], [19.6, 8246, 1], [15.6, 5539, 1], [0.3, 19576, 0], [13.7, 3264, 0], [22.4, 504, 1], [0.6, 1355, 0], [1.4, 2312, 0], [7.7, 1334, 0], [1.3, 2067, 0], [1.7, 14391, 0], [7.3, 405, 0], [19.7, 2688, 1], [0.9, 9355, 0], [26.3, 376, 1], [4.7, 14911, 0], [10.3, 13556, 1], [0.4, 6722, 0], [5.6, 1297, 0], [6.9, 9079, 1], [8.3, 1613, 0], [3.4, 1006, 0], [1.7, 1052, 0], [13.3, 911, 1], [4.4, 651, 0], [2.3, 6945, 0], [2.9, 9606, 0], [17.7, 6356, 0], [14.7, 5422, 0], [8.4, 1197, 0], [5.3, 1586, 1], [2.6, 8541, 0], [2.6, 794, 0], [0.3, 30935, 0], [2.4, 21068, 0], [5.3, 39289, 0], [15.6, 666, 1], [11.9, 25606, 0], [0.4, 2800, 0], [0.6, 16309, 0], [11.7, 746, 1], [0.4, 17988, 0], [3.6, 3003, 0], [0.4, 20247, 0], [0.9, 2092, 0], [22.9, 474, 1], [13.7, 545, 1], [21.9, 95, 1], [0.4, 1720, 0], [0.9, 7586, 0], [6.7, 1245, 0], [7.3, 35096, 1], [0.6, 3528, 0], [0.6, 6537, 0], [20.6, 8815, 1], [5.4, 1900, 0], [0.3, 13399, 0], [12.4, 751, 0], [14.9, 9550, 1], [2.3, 22862, 0], [4.7, 18353, 0], [25.7, 7215, 1], [0.7, 17595, 0], [14.3, 558, 0], [0.4, 22552, 0], [3.7, 1291, 0], [1.3, 25858, 0], [1.9, 9890, 0], [5.3, 14914, 0], [0.6, 768, 0], [1.3, 1370, 0], [0.4, 14116, 0], [5.4, 2337, 0], [7.6, 2377, 0], [1.7, 13661, 0], [0.4, 2221, 0], [8.9, 3139, 1], [10.6, 1916, 1], [0.3, 14428, 0], [3.4, 28551, 0], [0.9, 8438, 0], [19.7, 452, 1], [18.7, 14031, 0], [0.4, 7444, 0], [1.3, 8102, 0], [3.6, 1928, 0], [3.4, 1278, 0], [2.9, 1128, 0], [7.4, 1391, 0], [17.3, 3145, 1], [5.9, 20995, 0], [10.7, 1076, 0], [2.6, 1346, 0], [0.3, 13644, 0], [0.4, 1932, 0], [9.9, 9894, 0], [19.9, 2474, 1], [0.3, 28746, 0], [2.4, 23331, 0], [8.7, 3160, 0], [0.7, 15209, 0], [16.4, 446, 1], [4.6, 4435, 0], [13.7, 1216, 1], [4.7, 557, 0], [13.3, 1368, 1], [20.3, 10006, 1], [15.4, 711, 1], [1.3, 13986, 0], [8.6, 14232, 1], [0.3, 2070, 0], [4.3, 1392, 1], [17.9, 4049, 1], [0.3, 12517, 0], [1.3, 4147, 0], [5.6, 2814, 0], [8.7, 6134, 0], [3.7, 2159, 0], [0.7, 13124, 0], [1.6, 642, 0], [0.3, 8502, 0], [1.3, 1882, 0], [1.6, 965, 0], [0.6, 10280, 0], [1.6, 19076, 0], [1.3, 9065, 0], [1.3, 559, 0], [16.7, 1347, 1], [2.9, 1642, 0], [1.9, 3782, 0], [12.7, 8363, 0], [0.9, 1323, 0], [3.3, 7273, 0], [0.4, 3284, 0], [0.7, 5137, 0], [19.3, 2078, 1], [13.6, 904, 1], [5.4, 1966, 1], [0.6, 2604, 0], [0.6, 2230, 0], [12.3, 1139, 1], [3.7, 5038, 0], [0.7, 22713, 0], [21.9, 876, 1], [19.3, 14257, 0], [5.4, 4021, 0], [9.9, 877, 0], [1.4, 14173, 0], [0.3, 14417, 0], [15.4, 1908, 1], [23.3, 621, 1], [9.3, 6165, 1], [0.6, 10279, 0], [15.6, 4867, 1], [15.6, 493, 1], [0.4, 10573, 0], [2.3, 7069, 0], [6.4, 1029, 0], [6.3, 891, 0], [0.7, 2208, 0], [3.9, 5116, 1], [8.9, 3802, 0], [29.4, 296, 1], [0.3, 968, 0], [11.3, 306, 0], [5.9, 2098, 1], [2.6, 2861, 0], [3.4, 1835, 0], [2.4, 1624, 0], [0.3, 15716, 0], [1.6, 16412, 0], [5.3, 275, 0], [0.9, 714, 0], [1.9, 809, 0], [2.4, 651, 0], [1.6, 21535, 0], [1.3, 1499, 0], [20.4, 383, 1], [8.3, 2747, 1], [0.4, 3264, 0], [2.3, 2501, 0], [2.6, 25845, 0], [0.4, 23943, 0], [6.6, 16837, 0], [17.6, 10097, 1], [2.4, 3181, 0], [1.7, 19475, 0], [4.7, 3134, 0], [0.9, 14046, 0], [15.6, 8957, 0], [0.6, 8347, 0], [20.7, 7870, 0], [47.6, 1350, 1], [3.7, 4441, 0], [8.6, 1146, 0], [7.6, 16928, 0], [2.3, 21290, 0], [3.4, 3961, 0], [4.6, 21775, 0], [10.7, 3274, 1], [2.3, 5394, 0], [17.3, 601, 1], [0.6, 9844, 0], [19.3, 228, 1], [0.3, 21704, 0], [4.9, 2475, 0], [19.4, 329, 0], [0.6, 94102, 0], [1.4, 3249, 0], [11.9, 1043, 0], [0.4, 2044, 0], [6.3, 19289, 0], [0.4, 3036, 0], [12.6, 1007, 0], [1.4, 3119, 0], [0.3, 9768, 0], [1.3, 6235, 0], [11.4, 99, 1], [23.7, 344, 1], [0.9, 1022, 0], [4.7, 3204, 0], [1.6, 21567, 0], [7.3, 716, 1], [10.7, 3064, 0], [4.3, 481, 0], [1.9, 1583, 0], [13.3, 287, 1], [14.3, 42536, 0], [4.6, 10821, 0], [7.7, 19845, 0], [0.3, 18257, 0], [4.3, 14405, 0], [21.9, 10838, 1], [0.6, 3016, 0], [3.7, 11677, 0], [1.9, 7871, 0], [21.6, 1540, 1], [4.4, 5338, 0], [6.6, 63810, 0], [8.6, 2365, 0], [10.9, 1006, 1], [4.3, 11905, 0], [6.9, 1270, 0], [1.7, 4888, 0], [2.4, 11000, 0], [2.9, 858, 0], [0.7, 17628, 0], [5.4, 779, 0], [0.7, 1312, 0], [2.9, 2039, 0], [18.3, 4469, 1], [4.9, 23339, 0], [1.4, 14238, 0], [0.3, 6304, 0], [2.3, 930, 0], [11.9, 240, 0], [16.4, 475, 1], [0.4, 11602, 0], [19.4, 1006, 1], [3.3, 714, 0], [4.7, 1592, 0], [5.7, 3486, 0], [0.4, 11994, 0], [0.7, 3228, 0], [0.9, 23632, 0], [5.9, 1046, 1], [6.6, 687, 0], [0.9, 1135, 0], [1.4, 22397, 0], [2.4, 1751, 1], [6.6, 5419, 0], [0.6, 9542, 0], [1.9, 4737, 0], [3.3, 3129, 0], [0.7, 4503, 0], [14.7, 727, 0], [2.3, 12311, 0], [11.9, 952, 1], [9.7, 397, 0], [1.4, 2294, 0], [5.7, 11572, 1], [2.6, 13532, 0], [0.4, 12917, 0], [6.6, 2330, 0], [2.7, 12552, 0], [20.6, 937, 1], [5.4, 6967, 0], [11.7, 4867, 1], [8.9, 730, 1], [0.3, 6424, 0], [4.7, 32281, 0], [0.3, 1553, 0], [1.9, 12843, 0], [6.6, 21307, 0], [0.3, 2367, 0], [8.7, 1717, 0], [20.3, 1385, 1], [17.4, 1154, 1], [4.7, 4788, 0], [6.6, 29763, 0], [7.4, 2770, 0], [3.7, 729, 0], [0.7, 7799, 0], [36.7, 178, 1], [0.3, 33531, 0], [0.3, 7887, 0], [0.4, 1423, 0], [3.9, 3366, 0], [0.3, 10302, 0], [4.6, 3667, 0], [14.9, 1852, 0], [1.3, 3513, 0], [3.9, 2692, 0], [0.3, 42942, 0], [3.6, 4053, 1], [0.3, 15342, 0], [19.4, 1094, 1], [20.6, 20745, 0], [7.7, 1759, 0], [8.3, 588, 0], [3.7, 29782, 0], [14.4, 2579, 0], [2.4, 1837, 0], [2.4, 862, 0], [6.7, 326, 0], [0.4, 5566, 0], [10.3, 3016, 0], [9.4, 526, 0], [1.3, 14307, 0], [2.4, 773, 0], [5.3, 7729, 1], [9.6, 805, 1], [13.4, 728, 0], [2.6, 10572, 0], [8.3, 1513, 1], [9.7, 4291, 1], [4.6, 4821, 0], [0.7, 4517, 0], [2.6, 1036, 0], [0.6, 315, 0], [10.7, 4588, 0], [6.3, 1991, 0], [5.3, 13250, 0], [0.9, 11265, 0], [2.7, 1578, 0], [2.7, 1114, 0], [1.7, 1575, 0], [0.3, 3417, 0], [16.9, 1219, 1], [0.9, 11440, 0], [17.6, 2044, 0], [19.6, 178, 1], [2.4, 47298, 0], [1.3, 2253, 0], [6.3, 1397, 1], [2.9, 20874, 0], [14.9, 1349, 0], [5.7, 864, 0], [1.9, 970, 0], [3.4, 2051, 0], [0.9, 16593, 0], [1.3, 389, 0], [12.3, 11148, 0], [0.3, 29062, 0], [15.6, 13945, 1], [0.3, 28281, 0], [3.7, 4850, 0]], MEAN = [6.35655737704918, 7303.279245901639], SD = [6.948845731544646, 9211.790553198465];
+
+function setupCanvas(c, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function theme() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', text: dark ? '#d0d4da' : '#1f2328',
+           grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+           blue: dark ? '#4493f8' : '#0969da', red: dark ? '#f47067' : '#cf222e',
+           purple: '#8250df', amber: '#bf8700',
+           stay: dark ? 'rgba(68,147,248,0.45)' : 'rgba(9,105,218,0.38)',
+           churn: dark ? 'rgba(244,112,103,0.70)' : 'rgba(207,34,46,0.62)' };
+}
+
+const $ = id => document.getElementById(id);
+const XMAX = 48, YMAX = 40000;
+let q = [14, 8000];
+const pad = {l: 56, r: 12, t: 10, b: 32};
+let geom = null;
+function draw() {
+  const k = +$('k').value, scaled = $('scaled').checked, c = theme();
+  $('kv').textContent = k;
+  $('qv').textContent = `${q[0].toFixed(1)} weeks, $${Math.round(q[1]).toLocaleString()}`;
+  const d = PTS.map(([x, yv, lab], i) => {
+    const dx = scaled ? (x - q[0]) / SD[0] : (x - q[0]);
+    const dy = scaled ? (yv - q[1]) / SD[1] : (yv - q[1]);
+    return [dx * dx + dy * dy, i];
+  }).sort((a, b) => a[0] - b[0]).slice(0, k);
+  let nc = 0; for (const [, i] of d) nc += PTS[i][2];
+  $('nc').textContent = nc; $('ns').textContent = k - nc;
+  const p = $('pred'); p.textContent = nc > k / 2 ? 'churn' : 'stay'; p.className = nc > k / 2 ? 'red' : 'blue';
+  const [ctx, W, H] = setupCanvas($('cv'), 400);
+  const X = x => pad.l + x / XMAX * (W - pad.l - pad.r);
+  const Y = v => H - pad.b - v / YMAX * (H - pad.t - pad.b);
+  geom = {W, H, X, Y};
+  ctx.font = '11px sans-serif';
+  for (let v = 0; v <= YMAX; v += 10000) { ctx.strokeStyle = c.grid; ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(W - pad.r, Y(v)); ctx.stroke();
+    ctx.fillStyle = c.axis; ctx.textAlign = 'right'; ctx.fillText('$' + (v / 1000) + 'k', pad.l - 6, Y(v) + 4); }
+  ctx.textAlign = 'center';
+  for (let x = 0; x <= XMAX; x += 8) ctx.fillText(x, X(x), H - pad.b + 14);
+  ctx.fillText('weeks since last order', (pad.l + W - pad.r) / 2, H - 4);
+  ctx.save(); ctx.translate(12, (pad.t + H - pad.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('revenue, last 12 months', 0, 0); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, W - pad.l - pad.r, H - pad.t - pad.b); ctx.clip();
+  for (const [x, yv, lab] of PTS) { ctx.fillStyle = lab ? c.churn : c.stay; ctx.beginPath(); ctx.arc(X(x), Y(yv), 2.6, 0, 7); ctx.fill(); }
+  ctx.strokeStyle = c.amber; ctx.lineWidth = 1;
+  for (const [, i] of d) { const [x, yv, lab] = PTS[i]; ctx.beginPath(); ctx.moveTo(X(q[0]), Y(q[1])); ctx.lineTo(X(x), Y(yv)); ctx.stroke();
+    ctx.strokeStyle = lab ? c.red : c.blue; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(X(x), Y(yv), 5, 0, 7); ctx.stroke();
+    ctx.strokeStyle = c.amber; ctx.lineWidth = 1; }
+  ctx.restore();
+  ctx.fillStyle = c.amber; ctx.strokeStyle = c.text; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(X(q[0]), Y(q[1]), 7, 0, 7); ctx.fill(); ctx.stroke();
+}
+$('cv').addEventListener('pointerdown', e => {
+  const r = e.target.getBoundingClientRect(), {W, H} = geom;
+  const px = e.clientX - r.left, py = e.clientY - r.top;
+  const x = (px - pad.l) / (W - pad.l - pad.r) * XMAX;
+  const yv = (H - pad.b - py) / (H - pad.t - pad.b) * YMAX;
+  q = [Math.max(0, Math.min(XMAX, x)), Math.max(0, Math.min(YMAX, yv))]; draw();
+});
+for (const id of ['k', 'scaled']) $(id).addEventListener('input', draw);
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script><script>
+// report the content height to the book page so the iframe is sized to fit (assets/iframe-resize.html)
+(function () {
+  function report() {
+    var b = document.body, s = getComputedStyle(b);
+    parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+      + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+  }
+  new ResizeObserver(report).observe(document.body);
+  window.addEventListener("load", report);
+  report();
+})();
+</script>
+<script>
+// answer the book page's request for this demo's height (sent once the page's listener is ready)
+window.addEventListener("message", function (e) {
+  if (!e.data || !e.data.pybaDemoPing) return;
+  var b = document.body, s = getComputedStyle(b);
+  parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+    + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+});
+</script>
+</body></html>

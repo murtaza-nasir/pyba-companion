@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Cross-validation folds explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
+  @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
+  .row { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin-bottom: 8px; }
+  .readout { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; margin: 6px 0 0; }
+  input[type=range] { width: 170px; accent-color: #0969da; }
+  button, select { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
+           border: 1px solid var(--bs-border-color, #d0d7de);
+           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
+  .pane-title { font-size: 12.5px; font-weight: 600; margin: 4px 0 2px; }
+  canvas { width: 100%; height: auto; display: block; touch-action: none; }
+  table.g { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+  table.g td, table.g th { border: 1px solid var(--bs-border-color, #d0d7de); padding: 3px 10px; text-align: right; }
+  table.g th { font-weight: 600; }
+  table.g td:first-child, table.g th:first-child { text-align: left; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  @media (prefers-color-scheme: dark) {
+    button, select { background: #21262d; border: 1px solid #3d444d; color: #e6edf3; }
+    button:hover { background: #30363d; }
+    table.g td, table.g th { border-color: #3d444d; }
+    .blue { color: #4493f8; } .red { color: #f47067; }
+  }
+</style>
+<style id="pybaStableReadouts">#dv{display:inline-block;min-width:2.8ch}</style>
+</head>
+<body>
+<div class="row">
+  <label>max_depth <input type="range" id="d" min="1" max="12" step="1" value="2"></label>
+  <span class="readout"><b id="dv"></b></span>
+  <button id="next">Next round</button>
+  <button id="all">All rounds</button>
+  <button id="reset">Reset</button>
+</div>
+<div class="row readout">
+  <span>round <b id="rv"></b> of 5</span>
+  <span>CV accuracy: <b class="purple" id="cvm"></b></span>
+  <span>training accuracy: <b class="blue" id="trv"></b></span>
+</div>
+<div class="pane-title">The 610 training customers in five folds: fitted on (blue) and validation fold (amber)</div>
+<div><canvas id="cf"></canvas></div>
+<div class="pane-title">Training accuracy (blue) and CV accuracy (purple) by depth</div>
+<div><canvas id="cd"></canvas></div>
+<p class="hint">The 610 training customers from the chapter's split, in their order in the training set,
+divided into the same five stratified folds as <code>cross_val_score</code> with <code>cv=5</code>
+(122 customers per fold). In each round, a tree of the chosen depth is fitted on the four blue folds
+and scored on the amber fold. The fold accuracies are listed on the right as the rounds are stepped
+through, and the CV accuracy is their mean, with the standard deviation of the five. In the lower chart,
+the shaded band is the CV mean plus or minus one standard deviation. The test set is not used anywhere
+in this explorer.</p>
+<script>
+const FOLD = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4], CV = [{"d": 1, "folds": [0.803279, 0.827869, 0.868852, 0.844262, 0.836066], "mean": 0.836066, "sd": 0.021374, "train": 0.842623}, {"d": 2, "folds": [0.860656, 0.852459, 0.909836, 0.877049, 0.852459], "mean": 0.870492, "sd": 0.021624, "train": 0.877049}, {"d": 3, "folds": [0.844262, 0.844262, 0.909836, 0.877049, 0.852459], "mean": 0.865574, "sd": 0.025184, "train": 0.878689}, {"d": 4, "folds": [0.795082, 0.836066, 0.893443, 0.827869, 0.803279], "mean": 0.831148, "sd": 0.034621, "train": 0.886885}, {"d": 5, "folds": [0.803279, 0.852459, 0.877049, 0.836066, 0.778689], "mean": 0.829508, "sd": 0.03493, "train": 0.914754}, {"d": 6, "folds": [0.819672, 0.844262, 0.901639, 0.803279, 0.795082], "mean": 0.832787, "sd": 0.038306, "train": 0.92459}, {"d": 7, "folds": [0.770492, 0.836066, 0.885246, 0.827869, 0.754098], "mean": 0.814754, "sd": 0.047399, "train": 0.942623}, {"d": 8, "folds": [0.795082, 0.836066, 0.852459, 0.803279, 0.762295], "mean": 0.809836, "sd": 0.031703, "train": 0.955738}, {"d": 9, "folds": [0.786885, 0.827869, 0.868852, 0.803279, 0.737705], "mean": 0.804918, "sd": 0.043497, "train": 0.97377}, {"d": 10, "folds": [0.786885, 0.811475, 0.844262, 0.803279, 0.721311], "mean": 0.793443, "sd": 0.040621, "train": 0.977049}, {"d": 11, "folds": [0.803279, 0.811475, 0.844262, 0.786885, 0.721311], "mean": 0.793443, "sd": 0.040621, "train": 0.990164}, {"d": 12, "folds": [0.795082, 0.811475, 0.844262, 0.786885, 0.721311], "mean": 0.791803, "sd": 0.040356, "train": 0.996721}];
+
+function setupCanvas(c, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = c.parentElement.clientWidth;
+  c.width = cssW * dpr; c.height = cssH * dpr;
+  c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, cssW, cssH];
+}
+function theme() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return { axis: dark ? '#8a919c' : '#57606a', text: dark ? '#d0d4da' : '#1f2328',
+           grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+           blue: dark ? '#4493f8' : '#0969da', red: dark ? '#f47067' : '#cf222e',
+           purple: dark ? '#a371f7' : '#8250df', amber: '#bf8700',
+           shade: dark ? 'rgba(191,135,0,0.10)' : 'rgba(191,135,0,0.12)',
+           fit: dark ? 'rgba(68,147,248,0.40)' : 'rgba(9,105,218,0.30)',
+           stay: dark ? 'rgba(68,147,248,0.45)' : 'rgba(9,105,218,0.38)',
+           churn: dark ? 'rgba(244,112,103,0.70)' : 'rgba(207,34,46,0.62)' };
+}
+function jitter(i) { const s = Math.sin(i * 12.9898) * 43758.5453; return (s - Math.floor(s)) - 0.5; }
+
+const $ = id => document.getElementById(id);
+let shown = 0;
+function draw() {
+  const c = theme(), d = +$('d').value, R = CV[d - 1];
+  $('dv').textContent = d; $('rv').textContent = shown;
+  $('trv').textContent = R.train.toFixed(3);
+  const part = R.folds.slice(0, shown), pm = part.reduce((u, v) => u + v, 0) / Math.max(shown, 1);
+  $('cvm').textContent = shown === 5 ? `${R.mean.toFixed(3)} ± ${R.sd.toFixed(3)}`
+    : shown === 0 ? 'press Next round' : `${pm.toFixed(3)} so far (mean of ${shown} fold${shown > 1 ? 's' : ''})`;
+  // fold grid
+  let [ctx, W, H] = setupCanvas($('cf'), 190);
+  const L = 64, Rr = 92, T = 6, rowH = (H - T - 6) / 5, cw = (W - L - Rr) / FOLD.length;
+  ctx.font = '12px sans-serif';
+  for (let r = 0; r < 5; r++) {
+    const y0 = T + r * rowH, active = r === shown - 1;
+    ctx.fillStyle = c.axis; ctx.textAlign = 'right'; ctx.fillText('round ' + (r + 1), L - 8, y0 + rowH / 2 + 4);
+    for (let i = 0; i < FOLD.length; i++) {
+      ctx.fillStyle = FOLD[i] === r ? c.amber : c.fit;
+      ctx.globalAlpha = r < shown ? (active ? 1 : 0.55) : 0.18;
+      ctx.fillRect(L + i * cw, y0 + 3, Math.max(cw, 0.6), rowH - 6);
+    }
+    ctx.globalAlpha = 1;
+    if (r < shown) { ctx.fillStyle = active ? c.text : c.axis; ctx.textAlign = 'left';
+      ctx.fillText('fold ' + (r + 1) + ': ' + R.folds[r].toFixed(3), W - Rr + 8, y0 + rowH / 2 + 4); }
+  }
+  // depth chart
+  [ctx, W, H] = setupCanvas($('cd'), 230);
+  const pad = {l: 46, r: 14, t: 10, b: 32}, y0 = 0.7, y1 = 1.005;
+  const X = v => pad.l + (v - 1) / 11 * (W - pad.l - pad.r);
+  const Y = v => H - pad.b - (v - y0) / (y1 - y0) * (H - pad.t - pad.b);
+  ctx.font = '11px sans-serif';
+  for (const v of [0.7, 0.8, 0.9, 1.0]) { ctx.strokeStyle = c.grid; ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(W - pad.r, Y(v)); ctx.stroke();
+    ctx.fillStyle = c.axis; ctx.textAlign = 'right'; ctx.fillText(Math.round(v * 100) + '%', pad.l - 6, Y(v) + 4); }
+  ctx.textAlign = 'center'; for (let v = 1; v <= 12; v++) ctx.fillText(v, X(v), H - pad.b + 14);
+  ctx.fillText('max_depth', (pad.l + W - pad.r) / 2, H - 3);
+  ctx.fillStyle = 'rgba(130,80,223,0.15)'; ctx.beginPath();
+  CV.forEach((r, i) => { i ? ctx.lineTo(X(r.d), Y(r.mean + r.sd)) : ctx.moveTo(X(r.d), Y(r.mean + r.sd)); });
+  for (let i = CV.length - 1; i >= 0; i--) ctx.lineTo(X(CV[i].d), Y(CV[i].mean - CV[i].sd));
+  ctx.closePath(); ctx.fill();
+  for (const [key, col] of [['train', c.blue], ['mean', c.purple]]) {
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath();
+    CV.forEach((r, i) => { i ? ctx.lineTo(X(r.d), Y(r[key])) : ctx.moveTo(X(r.d), Y(r[key])); }); ctx.stroke();
+    ctx.fillStyle = col; for (const r of CV) { ctx.beginPath(); ctx.arc(X(r.d), Y(r[key]), 3, 0, 7); ctx.fill(); }
+  }
+  ctx.lineWidth = 1; ctx.strokeStyle = c.axis; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(X(d), pad.t); ctx.lineTo(X(d), H - pad.b); ctx.stroke(); ctx.setLineDash([]);
+}
+$('d').addEventListener('input', draw);
+$('next').addEventListener('click', () => { shown = Math.min(5, shown + 1); draw(); });
+$('all').addEventListener('click', () => { shown = 5; draw(); });
+$('reset').addEventListener('click', () => { shown = 0; draw(); });
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script><script>
+// report the content height to the book page so the iframe is sized to fit (assets/iframe-resize.html)
+(function () {
+  function report() {
+    var b = document.body, s = getComputedStyle(b);
+    parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+      + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+  }
+  new ResizeObserver(report).observe(document.body);
+  window.addEventListener("load", report);
+  report();
+})();
+</script>
+<script>
+// answer the book page's request for this demo's height (sent once the page's listener is ready)
+window.addEventListener("message", function (e) {
+  if (!e.data || !e.data.pybaDemoPing) return;
+  var b = document.body, s = getComputedStyle(b);
+  parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+    + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+});
+</script>
+</body></html>
