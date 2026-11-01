@@ -27,6 +27,55 @@
   }
 </style>
 <style id="pybaStableReadouts">#dv{display:inline-block;min-width:2.8ch}</style>
+<script id="pybaTheme">
+// follow the book's light/dark theme (assets/iframe-resize.html) instead of the computer's setting;
+// opened on its own, outside the book, the demo keeps following the computer's setting
+(function () {
+  var forced = null, used = false, listeners = [], realMM = window.matchMedia.bind(window);
+  try {
+    var c = parent !== window && parent.document.body.classList;
+    if (c && c.contains("quarto-dark")) forced = "dark";
+    else if (c && c.contains("quarto-light")) forced = "light";
+  } catch (err) {}
+  var h = /pybaTheme=(dark|light)/.exec(location.hash);
+  if (h && !forced) forced = h[1];
+  function isDark(q) { return /prefers-color-scheme:\s*dark/.test(q) ? forced === "dark" : forced === "light"; }
+  window.matchMedia = function (q) {
+    if (!forced || !/prefers-color-scheme/.test(q)) return realMM(q);
+    used = true;
+    var m = { media: q, onchange: null,
+      addEventListener: function (t, f) { listeners.push([m, f]); }, removeEventListener: function () {},
+      addListener: function (f) { listeners.push([m, f]); }, removeListener: function () {} };
+    Object.defineProperty(m, "matches", { get: function () { return isDark(q); } });
+    return m;
+  };
+  function applyCss() {
+    document.documentElement.style.colorScheme = forced;  // the frame's own background and form controls
+    for (var i = 0; i < document.styleSheets.length; i++) {
+      var rules; try { rules = document.styleSheets[i].cssRules; } catch (err) { continue; }
+      for (var j = 0; j < rules.length; j++) {
+        var r = rules[j];
+        if (!r.media) continue;
+        if (r.pybaMedia === undefined) {
+          if (!/prefers-color-scheme/.test(r.media.mediaText)) continue;
+          r.pybaMedia = r.media.mediaText;
+        }
+        r.media.mediaText = r.pybaMedia.replace(/\(\s*prefers-color-scheme:\s*(dark|light)\s*\)/g,
+          function (s, k) { return (k === forced) ? "(min-width: 0px)" : "(max-width: -1px)"; });
+      }
+    }
+  }
+  if (forced) applyCss();
+  window.addEventListener("message", function (e) {
+    var t = e.data && e.data.pybaTheme;
+    if ((t !== "dark" && t !== "light") || t === forced) return;
+    forced = t; applyCss();
+    if (listeners.length) listeners.forEach(function (p) { var ev = { matches: p[0].matches, media: p[0].media };
+      p[1].call(p[0], ev); if (p[0].onchange) p[0].onchange(ev); });
+    else if (used) { location.hash = "pybaTheme=" + t; location.reload(); }
+  });
+})();
+</script>
 </head>
 <body>
 <div class="row">
