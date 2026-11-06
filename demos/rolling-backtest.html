@@ -1,35 +1,95 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Rolling backtest explorer</title>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Rolling backtest explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root { color-scheme: light dark; }
   body { margin: 0; padding: 12px 14px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
          color: var(--bs-body-color, #1f2328); background: var(--bs-body-bg, transparent); font-size: 14px; }
   @media (prefers-color-scheme: dark) { body { color: #d0d4da; } .hint { color: #8a919c; } }
-  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .row { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin-bottom: 8px; }
   .readout { font-variant-numeric: tabular-nums; }
-  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; }
+  .hint { color: var(--bs-secondary-color, #57606a); font-size: 12.5px; margin: 6px 0 0; }
   input[type=range] { width: 200px; accent-color: #0969da; }
-  button { font: inherit; padding: 3px 12px; border-radius: 6px; cursor: pointer;
-           border: 1px solid var(--bs-border-color, #d0d7de);
-           background: var(--bs-tertiary-bg, #f6f8fa); color: inherit; }
-  canvas { width: 100%; height: auto; display: block; }
-  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; } .green { color: #1a7f37; }
+  .panes { display: grid; grid-template-columns: 3fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .panes { grid-template-columns: 1fr; } }
+  .pane-title { font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+  canvas { width: 100%; height: auto; display: block; touch-action: none; }
+  .blue { color: #0969da; } .red { color: #cf222e; } .purple { color: #8250df; } .amber { color: #bf8700; }
+  table.sb { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  table.sb td { padding: 1px 10px 1px 0; }
+  .key { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 5px; }
+  @media (prefers-color-scheme: dark) {
+    .blue { color: #4493f8; } .red { color: #f47067; } .purple { color: #a371f7; }
+  }
 </style>
+<script id="pybaTheme">
+// follow the book's light/dark theme (assets/iframe-resize.html) instead of the computer's setting;
+// opened on its own, outside the book, the demo keeps following the computer's setting
+(function () {
+  var forced = null, used = false, listeners = [], realMM = window.matchMedia.bind(window);
+  try {
+    var c = parent !== window && parent.document.body.classList;
+    if (c && c.contains("quarto-dark")) forced = "dark";
+    else if (c && c.contains("quarto-light")) forced = "light";
+  } catch (err) {}
+  var h = /pybaTheme=(dark|light)/.exec(location.hash);
+  if (h && !forced) forced = h[1];
+  function isDark(q) { return /prefers-color-scheme:\s*dark/.test(q) ? forced === "dark" : forced === "light"; }
+  window.matchMedia = function (q) {
+    if (!forced || !/prefers-color-scheme/.test(q)) return realMM(q);
+    used = true;
+    var m = { media: q, onchange: null,
+      addEventListener: function (t, f) { listeners.push([m, f]); }, removeEventListener: function () {},
+      addListener: function (f) { listeners.push([m, f]); }, removeListener: function () {} };
+    Object.defineProperty(m, "matches", { get: function () { return isDark(q); } });
+    return m;
+  };
+  function applyCss() {
+    document.documentElement.style.colorScheme = forced;  // the frame's own background and form controls
+    for (var i = 0; i < document.styleSheets.length; i++) {
+      var rules; try { rules = document.styleSheets[i].cssRules; } catch (err) { continue; }
+      for (var j = 0; j < rules.length; j++) {
+        var r = rules[j];
+        if (!r.media) continue;
+        if (r.pybaMedia === undefined) {
+          if (!/prefers-color-scheme/.test(r.media.mediaText)) continue;
+          r.pybaMedia = r.media.mediaText;
+        }
+        r.media.mediaText = r.pybaMedia.replace(/\(\s*prefers-color-scheme:\s*(dark|light)\s*\)/g,
+          function (s, k) { return (k === forced) ? "(min-width: 0px)" : "(max-width: -1px)"; });
+      }
+    }
+  }
+  if (forced) applyCss();
+  window.addEventListener("message", function (e) {
+    var t = e.data && e.data.pybaTheme;
+    if ((t !== "dark" && t !== "light") || t === forced) return;
+    forced = t; applyCss();
+    if (listeners.length) listeners.forEach(function (p) { var ev = { matches: p[0].matches, media: p[0].media };
+      p[1].call(p[0], ev); if (p[0].onchange) p[0].onchange(ev); });
+    else if (used) { location.hash = "pybaTheme=" + t; location.reload(); }
+  });
+})();
+</script>
 </head>
 <body>
 <div class="row">
-  <label>Holdout starts at week <b><span id="hv" class="readout"></span></b>
-    <input type="range" id="h" min="60" max="142" value="142"></label>
-  <span class="readout" id="board"></span>
+  <label>Start of the holdout <input type="range" id="s" min="104" max="143" step="1" value="143"></label>
+  <span class="readout"><b id="sv"></b></span>
 </div>
-<canvas id="cv"></canvas>
-<p class="hint">The weekly revenue series with a 13-week holdout (shaded) that you can slide
-through time. The readout re-scores three methods on each holdout: naive (last value), seasonal
-naive (52 weeks earlier), and the 8-week moving average. Slide across the year and watch the
-ranking hold or change, which is the stability question the Chapter 11 build lab asks.</p>
+<table class="sb readout" id="board"></table>
+<div style="margin-top:6px"><canvas id="cv"></canvas></div>
+<p class="readout" style="margin:6px 0 0">Average MAE over all 40 starting weeks: <span id="avg"></span></p>
+<p class="hint">Company revenue from July 2024 on (gray), with a 13-week holdout (shaded) that can be moved through
+the final year. For every starting week, the four methods are fitted on the weeks before the holdout only, as in
+the chapter's <code>forecast_all</code>, and their forecasts are drawn in the holdout. The table lists each method's
+MAE on that holdout, lowest first. The small triangles under the axis are the starts of the four quarterly holdouts
+of the chapter's backtest.</p>
 <script>
+const D = {"y":[123770,82609,88417,98906,86144,160457,169817,160647,134799,102832,102887,108461,97346,95882,109721,110142,111220,95471,125707,136451,108934,120055,75377,127613,99007,139011,148588,134331,120857,150887,134116,92913,103783,106032,92231,121365,102368,97225,79705,96751,128439,109385,111751,117313,82533,108768,99787,108752,88703,96924,103724,100778,100154,87150,101694,137166,91103,145714,196471,155346,192708,96918,100840,100224,133130,113186,98104,109712,98512,98918,130241,89913,135390,128409,89224,108847,115507,126172,157037,177442,136319,146203,145307,112175,106980,101482,123451,123770,159271,137181,134785,124337,120362,127092,106018,121241,108836,107801,144845,126229,109448,103771,135462,120026,104131,115796,114648,111476,109536,242235,174318,231608,226920,102591,102029,100220,123234,104566,78033,102850,77509,111043,107609,130618,132216,142975,81480,113072,119321,94877,104524,114020,153847,117806,169347,96692,97781,125379,87285,112332,99867,81900,120852,101278,122590,122370,163868,124978,118544,127424,106620,159404,80013,86831,83688,109783],"years":[2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2023,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2024,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2025,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026,2026],"first":52,"roll":[{"start":104,"label":"Jul 6, 2025","fc":{"naive":[120026,120026,120026,120026,120026,120026,120026,120026,120026,120026,120026,120026,120026],"seasonal_naive":[100154,87150,101694,137166,91103,145714,196471,155346,192708,96918,100840,100224,133130],"moving_avg_8":[119552,119552,119552,119552,119552,119552,119552,119552,119552,119552,119552,119552,119552],"ETS":[118136,104835,119016,154582,108658,163177,213916,173004,210308,114396,117947,116600,148791]},"mae":{"naive":38305,"seasonal_naive":25816,"moving_avg_8":38196,"ETS":25912}},{"start":105,"label":"Jul 13, 2025","fc":{"naive":[104131,104131,104131,104131,104131,104131,104131,104131,104131,104131,104131,104131,104131],"seasonal_naive":[87150,101694,137166,91103,145714,196471,155346,192708,96918,100840,100224,133130,113186],"moving_avg_8":[118964,118964,118964,118964,118964,118964,118964,118964,118964,118964,118964,118964,118964],"ETS":[103429,117596,153147,107208,161712,212436,171510,208799,112872,116408,115046,147222,126668]},"mae":{"naive":40045,"seasonal_naive":26173,"moving_avg_8":38027,"ETS":26288}},{"start":106,"label":"Jul 20, 2025","fc":{"naive":[115796,115796,115796,115796,115796,115796,115796,115796,115796,115796,115796,115796,115796],"seasonal_naive":[101694,137166,91103,145714,196471,155346,192708,96918,100840,100224,133130,113186,98104],"moving_avg_8":[119964,119964,119964,119964,119964,119964,119964,119964,119964,119964,119964,119964,119964],"ETS":[115389,141138,108497,171035,205517,177163,189578,119239,121600,123445,138726,126132,122737]},"mae":{"naive":40200,"seasonal_naive":25514,"moving_avg_8":41162,"ETS":28218}},{"start":107,"label":"Jul 27, 2025","fc":{"naive":[114648,114648,114648,114648,114648,114648,114648,114648,114648,114648,114648,114648,114648],"seasonal_naive":[137166,91103,145714,196471,155346,192708,96918,100840,100224,133130,113186,98104,109712],"moving_avg_8":[116189,116189,116189,116189,116189,116189,116189,116189,116189,116189,116189,116189,116189],"ETS":[141165,108417,170897,205653,177202,189757,119208,121582,123402,138896,126303,122678,130093]},"mae":{"naive":40843,"seasonal_naive":25045,"moving_avg_8":41198,"ETS":30284}},{"start":108,"label":"Aug 3, 2025","fc":{"naive":[111476,111476,111476,111476,111476,111476,111476,111476,111476,111476,111476,111476,111476],"seasonal_naive":[91103,145714,196471,155346,192708,96918,100840,100224,133130,113186,98104,109712,98512],"moving_avg_8":[114345,114345,114345,114345,114345,114345,114345,114345,114345,114345,114345,114345,114345],"ETS":[103868,159226,208057,168506,202926,109836,113195,112139,142368,122659,108834,119984,109359]},"mae":{"naive":42724,"seasonal_naive":24685,"moving_avg_8":43386,"ETS":27450}},{"start":109,"label":"Aug 10, 2025","fc":{"naive":[109536,109536,109536,109536,109536,109536,109536,109536,109536,109536,109536,109536,109536],"seasonal_naive":[145714,196471,155346,192708,96918,100840,100224,133130,113186,98104,109712,98512,98918],"moving_avg_8":[114356,114356,114356,114356,114356,114356,114356,114356,114356,114356,114356,114356,114356],"ETS":[159355,208252,168653,203175,109983,113348,112282,142579,122840,108969,120139,109496,109347]},"mae":{"naive":42392,"seasonal_naive":24199,"moving_avg_8":43272,"ETS":27216}},{"start":110,"label":"Aug 17, 2025","fc":{"naive":[242235,242235,242235,242235,242235,242235,242235,242235,242235,242235,242235,242235,242235],"seasonal_naive":[196471,155346,192708,96918,100840,100224,133130,113186,98104,109712,98512,98918,130241],"moving_avg_8":[131664,131664,131664,131664,131664,131664,131664,131664,131664,131664,131664,131664,131664],"ETS":[212769,175234,205996,116939,120169,119634,147397,129024,117006,127496,117635,116493,147646]},"mae":{"naive":115886,"seasonal_naive":18516,"moving_avg_8":41908,"ETS":28116}},{"start":111,"label":"Aug 24, 2025","fc":{"naive":[174318,174318,174318,174318,174318,174318,174318,174318,174318,174318,174318,174318,174318],"seasonal_naive":[155346,192708,96918,100840,100224,133130,113186,98104,109712,98512,98918,130241,89913],"moving_avg_8":[136521,136521,136521,136521,136521,136521,136521,136521,136521,136521,136521,136521,136521],"ETS":[170930,200484,112455,115609,115196,142157,124049,112513,122798,113143,111697,142802,108684]},"mae":{"naive":68237,"seasonal_naive":19943,"moving_avg_8":42070,"ETS":23983}},{"start":112,"label":"Aug 31, 2025","fc":{"naive":[231608,231608,231608,231608,231608,231608,231608,231608,231608,231608,231608,231608,231608],"seasonal_naive":[192708,96918,100840,100224,133130,113186,98104,109712,98512,98918,130241,89913,135390],"moving_avg_8":[150468,150468,150468,150468,150468,150468,150468,150468,150468,150468,150468,150468,150468],"ETS":[204690,117780,120910,120636,147000,129301,118240,128343,118876,117174,148298,114940,150105]},"mae":{"naive":116266,"seasonal_naive":14321,"moving_avg_8":46889,"ETS":24052}},{"start":113,"label":"Sep 7, 2025","fc":{"naive":[226920,226920,226920,226920,226920,226920,226920,226920,226920,226920,226920,226920,226920],"seasonal_naive":[96918,100840,100224,133130,113186,98104,109712,98512,98918,130241,89913,135390,128409],"moving_avg_8":[165817,165817,165817,165817,165817,165817,165817,165817,165817,165817,165817,165817,165817],"ETS":[120109,123315,122907,150112,132066,120473,130813,121132,119771,150937,116609,153185,148166]},"mae":{"naive":118036,"seasonal_naive":12809,"moving_avg_8":56933,"ETS":24778}},{"start":114,"label":"Sep 14, 2025","fc":{"naive":[102591,102591,102591,102591,102591,102591,102591,102591,102591,102591,102591,102591,102591],"seasonal_naive":[100840,100224,133130,113186,98104,109712,98512,98918,130241,89913,135390,128409,89224],"moving_avg_8":[164166,164166,164166,164166,164166,164166,164166,164166,164166,164166,164166,164166,164166],"ETS":[128669,130262,146922,133746,129403,137186,130841,125546,156363,135110,153989,153819,112673]},"mae":{"naive":16005,"seasonal_naive":12969,"moving_avg_8":56906,"ETS":29242}},{"start":115,"label":"Sep 21, 2025","fc":{"naive":[102029,102029,102029,102029,102029,102029,102029,102029,102029,102029,102029,102029,102029],"seasonal_naive":[100224,133130,113186,98104,109712,98512,98918,130241,89913,135390,128409,89224,108847],"moving_avg_8":[162589,162589,162589,162589,162589,162589,162589,162589,162589,162589,162589,162589,162589],"ETS":[118863,146870,128356,116165,126734,116809,115774,146932,111601,149631,144174,104338,127145]},"mae":{"naive":16984,"seasonal_naive":13202,"moving_avg_8":54479,"ETS":22000}},{"start":116,"label":"Sep 28, 2025","fc":{"naive":[100220,100220,100220,100220,100220,100220,100220,100220,100220,100220,100220,100220,100220],"seasonal_naive":[133130,113186,98104,109712,98512,98918,130241,89913,135390,128409,89224,108847,115507],"moving_avg_8":[161182,161182,161182,161182,161182,161182,161182,161182,161182,161182,161182,161182,161182],"ETS":[144133,125008,112026,122878,112620,111999,143137,106482,146397,140373,100616,122542,126447]},"mae":{"naive":19149,"seasonal_naive":13495,"moving_avg_8":51603,"ETS":18739}},{"start":117,"label":"Oct 5, 2025","fc":{"naive":[123234,123234,123234,123234,123234,123234,123234,123234,123234,123234,123234,123234,123234],"seasonal_naive":[113186,98104,109712,98512,98918,130241,89913,135390,128409,89224,108847,115507,126172],"moving_avg_8":[162894,162894,162894,162894,162894,162894,162894,162894,162894,162894,162894,162894,162894],"ETS":[124295,111856,122491,112460,111523,142644,106952,145500,139832,99977,122520,125766,138868]},"mae":{"naive":21392,"seasonal_naive":15141,"moving_avg_8":55497,"ETS":20164}},{"start":118,"label":"Oct 12, 2025","fc":{"naive":[104566,104566,104566,104566,104566,104566,104566,104566,104566,104566,104566,104566,104566],"seasonal_naive":[98104,109712,98512,98918,130241,89913,135390,128409,89224,108847,115507,126172,157037],"moving_avg_8":[145686,145686,145686,145686,145686,145686,145686,145686,145686,145686,145686,145686,145686],"ETS":[111490,122058,112092,111061,142173,106765,144905,139341,99455,122178,125227,138494,169705]},"mae":{"naive":16386,"seasonal_naive":18518,"moving_avg_8":38291,"ETS":23369}},{"start":119,"label":"Oct 19, 2025","fc":{"naive":[78033,78033,78033,78033,78033,78033,78033,78033,78033,78033,78033,78033,78033],"seasonal_naive":[109712,98512,98918,130241,89913,135390,128409,89224,108847,115507,126172,157037,177442],"moving_avg_8":[133650,133650,133650,133650,133650,133650,133650,133650,133650,133650,133650,133650,133650],"ETS":[121142,110961,110206,141325,105033,144405,138507,98701,120854,124492,137237,168923,158005]},"mae":{"naive":32210,"seasonal_naive":21853,"moving_avg_8":24922,"ETS":23805}},{"start":120,"label":"Oct 26, 2025","fc":{"naive":[102850,102850,102850,102850,102850,102850,102850,102850,102850,102850,102850,102850,102850],"seasonal_naive":[98512,98918,130241,89913,135390,128409,89224,108847,115507,126172,157037,177442,136319],"moving_avg_8":[117555,117555,117555,117555,117555,117555,117555,117555,117555,117555,117555,117555,117555],"ETS":[110446,109756,140875,104367,144036,138055,98266,120280,124059,136676,168474,157383,141585]},"mae":{"naive":19649,"seasonal_naive":22673,"moving_avg_8":17501,"ETS":23122}},{"start":121,"label":"Nov 2, 2025","fc":{"naive":[77509,77509,77509,77509,77509,77509,77509,77509,77509,77509,77509,77509,77509],"seasonal_naive":[98918,130241,89913,135390,128409,89224,108847,115507,126172,157037,177442,136319,146203],"moving_avg_8":[98879,98879,98879,98879,98879,98879,98879,98879,98879,98879,98879,98879,98879],"ETS":[108903,140031,102438,143622,137233,97542,118859,123361,135339,167717,155784,140656,169185]},"mae":{"naive":39677,"seasonal_naive":23242,"moving_avg_8":21599,"ETS":24290}},{"start":122,"label":"Nov 9, 2025","fc":{"naive":[111043,111043,111043,111043,111043,111043,111043,111043,111043,111043,111043,111043,111043],"seasonal_naive":[130241,89913,135390,128409,89224,108847,115507,126172,157037,177442,136319,146203,145307],"moving_avg_8":[99935,99935,99935,99935,99935,99935,99935,99935,99935,99935,99935,99935,99935],"ETS":[140083,102503,143669,137285,97594,118919,123413,135399,167770,155847,140712,169235,153158]},"mae":{"naive":19194,"seasonal_naive":24158,"moving_avg_8":25352,"ETS":25395}},{"start":123,"label":"Nov 16, 2025","fc":{"naive":[107609,107609,107609,107609,107609,107609,107609,107609,107609,107609,107609,107609,107609],"seasonal_naive":[89913,135390,128409,89224,108847,115507,126172,157037,177442,136319,146203,145307,112175],"moving_avg_8":[100633,100633,100633,100633,100633,100633,100633,100633,100633,100633,100633,100633,100633],"ETS":[101557,142963,136509,96828,118036,122642,134520,166979,154920,139885,168477,152331,111777]},"mae":{"naive":21354,"seasonal_naive":23608,"moving_avg_8":24636,"ETS":23819}},{"start":124,"label":"Nov 23, 2025","fc":{"naive":[130618,130618,130618,130618,130618,130618,130618,130618,130618,130618,130618,130618,130618],"seasonal_naive":[135390,128409,89224,108847,115507,126172,157037,177442,136319,146203,145307,112175,106980],"moving_avg_8":[104433,104433,104433,104433,104433,104433,104433,104433,104433,104433,104433,104433,104433],"ETS":[142801,137181,97291,119928,123037,136225,167481,157188,140734,168326,153033,112880,122053]},"mae":{"naive":23993,"seasonal_naive":21185,"moving_avg_8":21087,"ETS":23896}},{"start":125,"label":"Nov 30, 2025","fc":{"naive":[132216,132216,132216,132216,132216,132216,132216,132216,132216,132216,132216,132216,132216],"seasonal_naive":[128409,89224,108847,115507,126172,157037,177442,136319,146203,145307,112175,106980,101482],"moving_avg_8":[105555,105555,105555,105555,105555,105555,105555,105555,105555,105555,105555,105555,105555],"ETS":[136944,97029,119821,122764,136093,167214,157127,140503,167976,152781,112673,121746,123067]},"mae":{"naive":25133,"seasonal_naive":22779,"moving_avg_8":20288,"ETS":23163}},{"start":126,"label":"Dec 7, 2025","fc":{"naive":[142975,142975,142975,142975,142975,142975,142975,142975,142975,142975,142975,142975,142975],"seasonal_naive":[89224,108847,115507,126172,157037,177442,136319,146203,145307,112175,106980,101482,123451],"moving_avg_8":[110357,110357,110357,110357,110357,110357,110357,110357,110357,110357,110357,110357,110357],"ETS":[97162,119956,122898,136229,167350,157266,140642,168114,152921,112814,121888,123209,113165]},"mae":{"naive":35211,"seasonal_naive":24440,"moving_avg_8":18446,"ETS":24753}},{"start":127,"label":"Dec 14, 2025","fc":{"naive":[81480,81480,81480,81480,81480,81480,81480,81480,81480,81480,81480,81480,81480],"seasonal_naive":[108847,115507,126172,157037,177442,136319,146203,145307,112175,106980,101482,123451,123770],"moving_avg_8":[110787,110787,110787,110787,110787,110787,110787,110787,110787,110787,110787,110787,110787],"ETS":[119660,122543,135921,166993,156979,140294,167723,152563,112470,121507,122810,112840,138371]},"mae":{"naive":34388,"seasonal_naive":24724,"moving_avg_8":16277,"ETS":25400}},{"start":128,"label":"Dec 21, 2025","fc":{"naive":[113072,113072,113072,113072,113072,113072,113072,113072,113072,113072,113072,113072,113072],"seasonal_naive":[115507,126172,157037,177442,136319,146203,145307,112175,106980,101482,123451,123770,159271],"moving_avg_8":[112065,112065,112065,112065,112065,112065,112065,112065,112065,112065,112065,112065,112065],"ETS":[122429,135676,166869,156665,140131,167667,152415,112278,121403,122748,112575,138261,125408]},"mae":{"naive":16880,"seasonal_naive":28969,"moving_avg_8":16843,"ETS":26770}},{"start":129,"label":"Dec 28, 2025","fc":{"naive":[119321,119321,119321,119321,119321,119321,119321,119321,119321,119321,119321,119321,119321],"seasonal_naive":[126172,157037,177442,136319,146203,145307,112175,106980,101482,123451,123770,159271,137181],"moving_avg_8":[117292,117292,117292,117292,117292,117292,117292,117292,117292,117292,117292,117292,117292],"ETS":[135620,166799,156614,140065,167588,152345,112213,121328,122667,112516,138185,125363,118536]},"mae":{"naive":21287,"seasonal_naive":32928,"moving_avg_8":20274,"ETS":29321}},{"start":130,"label":"Jan 4, 2026","fc":{"naive":[94877,94877,94877,94877,94877,94877,94877,94877,94877,94877,94877,94877,94877],"seasonal_naive":[157037,177442,136319,146203,145307,112175,106980,101482,123451,123770,159271,137181,134785],"moving_avg_8":[115271,115271,115271,115271,115271,115271,115271,115271,115271,115271,115271,115271,115271],"ETS":[166023,154828,139083,167173,151441,111077,120659,122216,110985,137475,123053,116731,100317]},"mae":{"naive":22259,"seasonal_naive":31593,"moving_avg_8":18357,"ETS":27090}},{"start":131,"label":"Jan 11, 2026","fc":{"naive":[104524,104524,104524,104524,104524,104524,104524,104524,104524,104524,104524,104524,104524],"seasonal_naive":[177442,136319,146203,145307,112175,106980,101482,123451,123770,159271,137181,134785,124337],"moving_avg_8":[114885,114885,114885,114885,114885,114885,114885,114885,114885,114885,114885,114885,114885],"ETS":[143013,125515,152602,137819,97768,106428,107668,98312,123124,111330,103547,87500,100186]},"mae":{"naive":18789,"seasonal_naive":29327,"moving_avg_8":18518,"ETS":18496}},{"start":132,"label":"Jan 18, 2026","fc":{"naive":[114020,114020,114020,114020,114020,114020,114020,114020,114020,114020,114020,114020,114020],"seasonal_naive":[136319,146203,145307,112175,106980,101482,123451,123770,159271,137181,134785,124337,120362],"moving_avg_8":[112810,112810,112810,112810,112810,112810,112810,112810,112810,112810,112810,112810,112810],"ETS":[120188,147508,132488,92295,101127,102438,92561,117688,105126,97497,81187,94175,121611]},"mae":{"naive":18977,"seasonal_naive":24620,"moving_avg_8":18884,"ETS":16165}},{"start":133,"label":"Jan 25, 2026","fc":{"naive":[153847,153847,153847,153847,153847,153847,153847,153847,153847,153847,153847,153847,153847],"seasonal_naive":[146203,145307,112175,106980,101482,123451,123770,159271,137181,134785,124337,120362,127092],"moving_avg_8":[115514,115514,115514,115514,115514,115514,115514,115514,115514,115514,115514,115514,115514],"ETS":[154511,139081,98758,108008,109476,98786,124667,110952,103960,87474,101244,129504,113221]},"mae":{"naive":44272,"seasonal_naive":23634,"moving_avg_8":16671,"ETS":15509}},{"start":134,"label":"Feb 1, 2026","fc":{"naive":[117806,117806,117806,117806,117806,117806,117806,117806,117806,117806,117806,117806,117806],"seasonal_naive":[145307,112175,106980,101482,123451,123770,159271,137181,134785,124337,120362,127092,106018],"moving_avg_8":[112368,112368,112368,112368,112368,112368,112368,112368,112368,112368,112368,112368,112368],"ETS":[133132,93071,101640,102841,93581,118237,106575,98627,82550,95068,121913,106729,106103]},"mae":{"naive":20391,"seasonal_naive":25900,"moving_avg_8":19972,"ETS":16959}},{"start":135,"label":"Feb 8, 2026","fc":{"naive":[169347,169347,169347,169347,169347,169347,169347,169347,169347,169347,169347,169347,169347],"seasonal_naive":[112175,106980,101482,123451,123770,159271,137181,134785,124337,120362,127092,106018,121241],"moving_avg_8":[123352,123352,123352,123352,123352,123352,123352,123352,123352,123352,123352,123352,123352],"ETS":[98557,107415,108723,98920,124100,111672,104183,88008,101074,128477,112844,112585,119614]},"mae":{"naive":57257,"seasonal_naive":24338,"moving_avg_8":18057,"ETS":14673}},{"start":136,"label":"Feb 15, 2026","fc":{"naive":[96692,96692,96692,96692,96692,96692,96692,96692,96692,96692,96692,96692,96692],"seasonal_naive":[106980,101482,123451,123770,159271,137181,134785,124337,120362,127092,106018,121241,108836],"moving_avg_8":[121304,121304,121304,121304,121304,121304,121304,121304,121304,121304,121304,121304,121304],"ETS":[107183,108489,98693,123864,111445,103947,87772,100828,128223,112596,112332,119364,87304]},"mae":{"naive":20802,"seasonal_naive":23894,"moving_avg_8":15635,"ETS":16937}},{"start":137,"label":"Feb 22, 2026","fc":{"naive":[97781,97781,97781,97781,97781,97781,97781,97781,97781,97781,97781,97781,97781],"seasonal_naive":[101482,123451,123770,159271,137181,134785,124337,120362,127092,106018,121241,108836,107801],"moving_avg_8":[118612,118612,118612,118612,118612,118612,118612,118612,118612,118612,118612,118612,118612],"ETS":[107243,97658,122645,110530,102888,86771,99639,126822,111357,110955,118054,86123,109208]},"mae":{"naive":22328,"seasonal_naive":24696,"moving_avg_8":14434,"ETS":17839}},{"start":138,"label":"Mar 1, 2026","fc":{"naive":[125379,125379,125379,125379,125379,125379,125379,125379,125379,125379,125379,125379,125379],"seasonal_naive":[123451,123770,159271,137181,134785,124337,120362,127092,106018,121241,108836,107801,144845],"moving_avg_8":[122425,122425,122425,122425,122425,122425,122425,122425,122425,122425,122425,122425,122425],"ETS":[99498,124920,112067,104760,88493,101806,129497,113642,113572,120510,88264,111765,108175]},"mae":{"naive":17006,"seasonal_naive":25798,"moving_avg_8":15380,"ETS":16203}},{"start":139,"label":"Mar 8, 2026","fc":{"naive":[87285,87285,87285,87285,87285,87285,87285,87285,87285,87285,87285,87285,87285],"seasonal_naive":[123770,159271,137181,134785,124337,120362,127092,106018,121241,108836,107801,144845,126229],"moving_avg_8":[120270,120270,120270,120270,120270,120270,120270,120270,120270,120270,120270,120270,120270],"ETS":[123723,110516,103322,86956,100440,128352,112322,112394,119258,86859,110531,106640,112258]},"mae":{"naive":33699,"seasonal_naive":25568,"moving_avg_8":15437,"ETS":18996}},{"start":140,"label":"Mar 15, 2026","fc":{"naive":[112332,112332,112332,112332,112332,112332,112332,112332,112332,112332,112332,112332,112332],"seasonal_naive":[159271,137181,134785,124337,120362,127092,106018,121241,108836,107801,144845,126229,109448],"moving_avg_8":[120059,120059,120059,120059,120059,120059,120059,120059,120059,120059,120059,120059,120059],"ETS":[109491,102167,85854,99168,126887,111000,110945,117867,85583,109096,105441,110892,91047]},"mae":{"naive":19489,"seasonal_naive":26952,"moving_avg_8":17939,"ETS":19593}},{"start":141,"label":"Mar 22, 2026","fc":{"naive":[99867,99867,99867,99867,99867,99867,99867,99867,99867,99867,99867,99867,99867],"seasonal_naive":[137181,134785,124337,120362,127092,106018,121241,108836,107801,144845,126229,109448,103771],"moving_avg_8":[113311,113311,113311,113311,113311,113311,113311,113311,113311,113311,113311,113311,113311],"ETS":[100853,84370,98019,126150,109931,110142,116922,84354,108193,103978,109760,89862,96756]},"mae":{"naive":24624,"seasonal_naive":23686,"moving_avg_8":20266,"ETS":20150}},{"start":142,"label":"Mar 29, 2026","fc":{"naive":[81900,81900,81900,81900,81900,81900,81900,81900,81900,81900,81900,81900,81900],"seasonal_naive":[134785,124337,120362,127092,106018,121241,108836,107801,144845,126229,109448,103771,135462],"moving_avg_8":[108823,108823,108823,108823,108823,108823,108823,108823,108823,108823,108823,108823,108823],"ETS":[81978,95834,124232,107795,108176,114862,82102,106148,101560,107546,87606,94596,103713]},"mae":{"naive":35195,"seasonal_naive":23416,"moving_avg_8":21164,"ETS":21259}},{"start":143,"label":"Apr 5, 2026","fc":{"naive":[120852,120852,120852,120852,120852,120852,120852,120852,120852,120852,120852,120852,120852],"seasonal_naive":[124337,120362,127092,106018,121241,108836,107801,144845,126229,109448,103771,135462,120026],"moving_avg_8":[102761,102761,102761,102761,102761,102761,102761,102761,102761,102761,102761,102761,102761],"ETS":[100156,127597,111917,111681,118685,86583,109880,106588,111827,92015,98649,108485,103941]},"mae":{"naive":19595,"seasonal_naive":23132,"moving_avg_8":22305,"ETS":17433}}],"avg":{"naive":35413,"seasonal_naive":22936,"moving_avg_8":29252,"ETS":22771}};
+const NAMES = {"naive": "Naive", "seasonal_naive": "Seasonal naive", "moving_avg_8": "8-week moving average", "ETS": "ETS"};
 
-function setupCanvas(id, cssH) {
-  const c = document.getElementById(id);
+function setupCanvas(c, cssH) {
   const dpr = window.devicePixelRatio || 1;
   const cssW = c.parentElement.clientWidth;
   c.width = cssW * dpr; c.height = cssH * dpr;
@@ -38,48 +98,84 @@ function setupCanvas(id, cssH) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return [ctx, cssW, cssH];
 }
-function themeColors() {
+function theme() {
   const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return { axis: dark ? '#8a919c' : '#57606a', grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)' };
+  return { axis: dark ? '#8a919c' : '#57606a', text: dark ? '#d0d4da' : '#1f2328',
+           grid: dark ? 'rgba(139,148,158,0.15)' : 'rgba(87,96,106,0.12)',
+           series: dark ? 'rgba(139,148,158,0.75)' : 'rgba(87,96,106,0.65)',
+           blue: dark ? '#4493f8' : '#0969da', red: dark ? '#f47067' : '#cf222e',
+           purple: dark ? '#a371f7' : '#8250df', amber: '#bf8700',
+           band: dark ? 'rgba(191,135,0,0.22)' : 'rgba(191,135,0,0.16)',
+           shade: dark ? 'rgba(191,135,0,0.16)' : 'rgba(191,135,0,0.12)' };
 }
+const fmt = v => (v < 0 ? '\u2212$' : '$') + Math.abs(Math.round(v)).toLocaleString('en-US');
+function yAxis(ctx, Y, pad, W, ticks, c) {
+  ctx.font = '11px sans-serif'; ctx.lineWidth = 1;
+  for (const t of ticks) { ctx.strokeStyle = c.grid; ctx.beginPath(); ctx.moveTo(pad.l, Y(t)); ctx.lineTo(W - pad.r, Y(t)); ctx.stroke();
+    ctx.fillStyle = c.axis; ctx.textAlign = 'right'; ctx.fillText((t < 0 ? '\u2212$' : '$') + Math.abs(t / 1000) + 'k', pad.l - 5, Y(t) + 4); }
+}
+function yearTicks(ctx, X, years, H, pad, c) {
+  ctx.fillStyle = c.axis; ctx.textAlign = 'left'; ctx.font = '11px sans-serif';
+  for (let i = 1; i < years.length; i++) if (years[i] !== years[i - 1]) {
+    ctx.strokeStyle = c.grid; ctx.beginPath(); ctx.moveTo(X(i), pad.t); ctx.lineTo(X(i), H - pad.b); ctx.stroke();
+    ctx.fillText(years[i], X(i) + 3, H - pad.b + 14); }
+}
+const $ = id => document.getElementById(id);
 
-const V = [123770, 82609, 88417, 98906, 86144, 160457, 169817, 160647, 134799, 102832, 102887, 108461, 97346, 95882, 109721, 110142, 111220, 95471, 125707, 136451, 108934, 120055, 75377, 127613, 99007, 139011, 148588, 134331, 120857, 150887, 134116, 92913, 103783, 106032, 92231, 121365, 102368, 97225, 79705, 96751, 128439, 109385, 111751, 117313, 82533, 108768, 99787, 108752, 88703, 96924, 103724, 100778, 100154, 87150, 101694, 137166, 91103, 145714, 196471, 155346, 192708, 96918, 100840, 100224, 133130, 113186, 98104, 109712, 98512, 98918, 130241, 89913, 135390, 128409, 89224, 108847, 115507, 126172, 157037, 177442, 136319, 146203, 145307, 112175, 106980, 101482, 123451, 123770, 159271, 137181, 134785, 124337, 120362, 127092, 106018, 121241, 108836, 107801, 144845, 126229, 109448, 103771, 135462, 120026, 104131, 115796, 114648, 111476, 109536, 242235, 174318, 231608, 226920, 102591, 102029, 100220, 123234, 104566, 78033, 102850, 77509, 111043, 107609, 130618, 132216, 142975, 81480, 113072, 119321, 94877, 104524, 114020, 153847, 117806, 169347, 96692, 97781, 125379, 87285, 112332, 99867, 81900, 120852, 101278, 122590, 122370, 163868, 124978, 118544, 127424, 106620, 159404, 80013, 86831, 83688];
-const HOLD = 13;
-function mae(pred, actual) {
-  let s = 0; for (let i = 0; i < actual.length; i++) s += Math.abs(actual[i] - pred[i]);
-  return s / actual.length;
+const KEYS = ['naive', 'seasonal_naive', 'moving_avg_8', 'ETS'];
+function colors(c) { return {naive: c.amber, seasonal_naive: c.red, moving_avg_8: c.blue, ETS: c.purple}; }
+function draw() {
+  const s = +$('s').value, r = D.roll[s - 104], c = theme(), col = colors(c);
+  $('sv').textContent = 'the week ending ' + r.label + ' (position ' + s + ')';
+  const order = KEYS.slice().sort((a, b) => r.mae[a] - r.mae[b]);
+  $('board').innerHTML = order.map((k, j) =>
+    `<tr><td><span class="key" style="background:${col[k]}"></span>${j === 0 ? '<b>' + NAMES[k] + '</b>' : NAMES[k]}</td>` +
+    `<td style="text-align:right">${j === 0 ? '<b>' + fmt(r.mae[k]) + '</b>' : fmt(r.mae[k])}</td></tr>`).join('');
+  $('avg').innerHTML = KEYS.slice().sort((a, b) => D.avg[a] - D.avg[b])
+    .map(k => NAMES[k] + ' ' + fmt(D.avg[k])).join(' &middot; ');
+  const n = D.y.length, F = D.first, pad = {l: 46, r: 10, t: 8, b: 30};
+  const [ctx, W, H] = setupCanvas($('cv'), 280);
+  const YMIN = 0, YMAX = 260000;
+  const X = j => pad.l + (j - F) / (n - 1 - F) * (W - pad.l - pad.r);
+  const Y = v => H - pad.b - (v - YMIN) / (YMAX - YMIN) * (H - pad.t - pad.b);
+  ctx.fillStyle = c.shade; ctx.fillRect(X(s), pad.t, X(s + 12) - X(s), H - pad.t - pad.b);
+  yAxis(ctx, Y, pad, W, [0, 50000, 100000, 150000, 200000, 250000], c);
+  ctx.fillStyle = c.axis; ctx.textAlign = 'left'; ctx.font = '11px sans-serif';
+  for (let j = F + 1; j < n; j++) if (D.years[j] !== D.years[j - 1]) {
+    ctx.strokeStyle = c.grid; ctx.beginPath(); ctx.moveTo(X(j), pad.t); ctx.lineTo(X(j), H - pad.b); ctx.stroke();
+    ctx.fillText(D.years[j], X(j) + 3, H - pad.b + 14); }
+  ctx.lineWidth = 1.2; ctx.strokeStyle = c.series; ctx.beginPath();
+  for (let j = F; j < n; j++) j > F ? ctx.lineTo(X(j), Y(D.y[j])) : ctx.moveTo(X(j), Y(D.y[j])); ctx.stroke();
+  for (const k of KEYS) { ctx.strokeStyle = col[k]; ctx.lineWidth = 2; ctx.beginPath();
+    r.fc[k].forEach((v, j) => j ? ctx.lineTo(X(s + j), Y(v)) : ctx.moveTo(X(s + j), Y(v))); ctx.stroke(); }
+  ctx.fillStyle = c.axis;
+  for (const q of [104, 117, 130, 143]) { ctx.beginPath(); ctx.moveTo(X(q), H - pad.b + 18); ctx.lineTo(X(q) - 4, H - pad.b + 25); ctx.lineTo(X(q) + 4, H - pad.b + 25); ctx.closePath(); ctx.fill(); }
 }
-function render() {
-  const h0 = +document.getElementById('h').value;
-  document.getElementById('hv').textContent = h0;
-  const test = V.slice(h0, h0 + HOLD);
-  const naive = new Array(HOLD).fill(V[h0 - 1]);
-  const snaive = V.slice(h0 - 52, h0 - 52 + HOLD);
-  const ma = new Array(HOLD).fill(V.slice(h0 - 8, h0).reduce((a, b) => a + b, 0) / 8);
-  const rows = [["naive", mae(naive, test)], ["seasonal naive", mae(snaive, test)], ["8-wk MA", mae(ma, test)]];
-  rows.sort((a, b) => a[1] - b[1]);
-  document.getElementById('board').innerHTML = rows.map((r, i) =>
-    (i ? " · " : "") + (i === 0 ? "<b class='green'>" : "<b>") + r[0] + "</b> $" + Math.round(r[1]).toLocaleString()).join("");
-  const [ctx, W, H] = setupCanvas('cv', 300);
-  const col = themeColors();
-  ctx.clearRect(0, 0, W, H);
-  const L = 55, R = 10, T = 10, B = 25;
-  const ymax = Math.max(...V) * 1.05;
-  const x = i => L + (W - L - R) * i / (V.length - 1);
-  const y = v => T + (H - T - B) * (1 - v / ymax);
-  ctx.fillStyle = 'rgba(191,135,0,0.15)';
-  ctx.fillRect(x(h0), T, x(Math.min(h0 + HOLD, V.length - 1)) - x(h0), H - T - B);
-  ctx.strokeStyle = 'rgba(139,148,158,0.9)';
-  ctx.beginPath(); V.forEach((v, i) => i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))); ctx.stroke();
-  ctx.strokeStyle = '#cf222e'; ctx.lineWidth = 2;
-  ctx.beginPath();
-  snaive.forEach((v, i) => i ? ctx.lineTo(x(h0 + i), y(v)) : ctx.moveTo(x(h0), y(v)));
-  ctx.stroke(); ctx.lineWidth = 1;
-  ctx.fillStyle = col.axis; ctx.font = '11px sans-serif';
-  ctx.fillText('seasonal-naive forecast in red · holdout shaded', L, H - 8);
-}
-document.getElementById('h').addEventListener('input', render);
-window.addEventListener('resize', render);
-if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
-render();
-</script></body></html>
+$('s').addEventListener('input', draw);
+
+window.addEventListener('resize', draw);
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw();
+</script><script>
+// report the content height to the book page so the iframe is sized to fit (assets/iframe-resize.html)
+(function () {
+  function report() {
+    var b = document.body, s = getComputedStyle(b);
+    parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+      + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+  }
+  new ResizeObserver(report).observe(document.body);
+  window.addEventListener("load", report);
+  report();
+})();
+</script>
+<script>
+// answer the book page's request for this demo's height (sent once the page's listener is ready)
+window.addEventListener("message", function (e) {
+  if (!e.data || !e.data.pybaDemoPing) return;
+  var b = document.body, s = getComputedStyle(b);
+  parent.postMessage({ pybaDemoHeight: Math.ceil(b.getBoundingClientRect().height
+    + parseFloat(s.marginTop) + parseFloat(s.marginBottom)) }, "*");
+});
+</script>
+</body></html>
